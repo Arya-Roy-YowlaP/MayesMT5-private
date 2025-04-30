@@ -4,6 +4,7 @@ import MetaTrader5 as mt5
 from datetime import datetime
 import matplotlib.pyplot as plt
 from game_environment import Game
+import torch
 
 class BacktestResults:
     def __init__(self):
@@ -96,10 +97,11 @@ class BacktestResults:
         plt.show()
 
 class Backtest:
-    def __init__(self, model, initial_balance=10000, risk_per_trade=0.01):
+    def __init__(self, model, initial_balance=10000, risk_per_trade=0.01, model_type="ppo"):
         self.model = model
         self.initial_balance = initial_balance
         self.risk_per_trade = risk_per_trade
+        self.model_type = model_type.lower()
         self.results = BacktestResults()
         
     def run(self, symbol="EURUSD", timeframe=mt5.TIMEFRAME_M1, start_date=None, end_date=None):
@@ -131,7 +133,15 @@ class Backtest:
             
             # Get state and action
             state = env.get_state()
-            action = self.model.predict(state)
+            
+            # Handle different model types
+            if self.model_type == "ppo":
+                action, _ = self.model.predict(state, deterministic=True)
+            else:  # DQN
+                with torch.no_grad():
+                    state_tensor = torch.tensor(state, dtype=torch.float32)
+                    q_values = self.model(state_tensor)
+                    action = torch.argmax(q_values).item()
             
             # Handle position management
             if position is None:

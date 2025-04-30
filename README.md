@@ -30,13 +30,74 @@ This project implements a reinforcement learning-based trading bot for MetaTrade
    pip install -r requirements.txt
    ```
 
+## Training Parameters
+
+### PPO Model Configuration
+The project uses Proximal Policy Optimization (PPO) with the following parameters:
+
+```python
+MODEL_PARAMS = {
+    'learning_rate': 3e-4,
+    'n_steps': 512,              # Steps per environment per update
+    'batch_size': 64,
+    'n_epochs': 10,
+    'gamma': 0.99,               # Discount factor
+    'gae_lambda': 0.95,
+    'clip_range': 0.2,
+    'ent_coef': 0.01,
+    'total_timesteps': 50000,    # Total training steps
+}
+```
+
+### Training Time Estimates
+- **Quick Test Run** (Current Settings):
+  - Total timesteps: 50,000
+  - Steps per update: 512
+  - Estimated time: 8-42 minutes
+  - Suitable for testing and development
+
+- **Full Training Run** (Recommended for Production):
+  - Total timesteps: 1,000,000
+  - Steps per update: 2,048
+  - Estimated time: 2.8-14 hours
+  - Better model performance
+
+### Environment Settings
+```python
+ENV_PARAMS = {
+    'window_size': 30,           # Lookback period
+    'reward_scaling': 100,       # PnL reward scaling
+    'max_position_size': 1.0,    # Maximum position size
+    'stop_loss_pips': 20,        # Stop loss
+    'take_profit_pips': 40,      # Take profit
+    'max_position_hold_time': 100 # Maximum hold time
+}
+```
+
+### Reward Structure
+The model is trained using a multi-component reward system:
+- Base PnL (weight: 1.0)
+- Duration penalty (weight: 0.3)
+- Volatility factor (weight: 0.4)
+- Trend alignment (weight: 0.3)
+- Risk management (weight: 0.4)
+
+### Training Progress
+- Monitor training progress using TensorBoard
+- Model checkpoints are saved periodically
+- Training logs include:
+  - Episode rewards
+  - Loss values
+  - Policy entropy
+  - Value function loss
+
 ## Project Structure
 
 ```
 MayesMT5-private/
 ├── config.py           # Configuration parameters
 ├── utils.py           # Utility functions
-├── rl_signal_writer.py # RL model implementation
+├── rl_signal_writer_torch.py # RL model implementation
 ├── ma_ribbon.py       # MA ribbon implementation
 ├── cci_strategy.py    # CCI strategy implementation
 ├── backtest.py        # Backtesting engine
@@ -49,22 +110,59 @@ MayesMT5-private/
 
 ## Usage Guide
 
-### 1. Running the RL Model
+### 1. Training the RL Model
 
 1. Ensure MT5 is running and logged in
-2. Run the training script:
+2. Train the RL model:
    ```bash
-   python rl_signal_writer.py
+   python train_rl_model.py
+   ```
+
+The training script will:
+- Initialize MT5 connection
+- Create and configure the training environment
+- Train the PPO model
+- Save model checkpoints to the `models/` directory
+- Save training logs to TensorBoard
+
+The model will be saved as `models/ppo_trading_model_TIMESTAMP` where TIMESTAMP is the current date and time.
+
+### 2. Running the RL Model Backtest
+
+1. After training is complete, run the backtest:
+   ```bash
+   python run_backtest.py
+   ```
+
+Note: Make sure to update the model path in `run_backtest.py` to match your trained model's timestamp:
+```python
+# In run_backtest.py
+model_path = "models/ppo_trading_model_TIMESTAMP"  # Update this with your model's timestamp
+```
+
+The backtest will:
+- Load the trained model
+- Run it against historical data
+- Generate performance metrics
+- Create visualization plots
+
+### 3. Running Traditional Strategy Backtest
+
+The project includes a traditional strategy implementation combining Moving Average Ribbon and CCI indicators.
+
+1. Run the traditional backtest script:
+   ```bash
+   python run_traditional_backtest.py
    ```
 
 The script will:
-- Initialize MT5 connection
-- Load historical data
-- Train the RL model
-- Save model checkpoints
-- Generate trading signals
+- Run backtest using MA Ribbon + CCI strategy
+- Display detailed performance metrics
+- Generate equity curve visualization
+- Perform parameter optimization
+- Save results to the results directory
 
-### 2. Training and Inference Flow
+### 4. Training and Inference Flow
 
 1. **Data Collection**:
    - Historical data is fetched from MT5
@@ -81,7 +179,7 @@ The script will:
    - Signals are validated against risk parameters
    - Trading decisions are executed through MT5
 
-### 3. Configuration
+### 5. Configuration
 
 Key parameters can be modified in `config.py`:
 
@@ -89,6 +187,31 @@ Key parameters can be modified in `config.py`:
 - RL model parameters (learning rate, batch size, etc.)
 - Environment parameters (window size, reward scaling)
 - Risk management settings
+- Traditional strategy parameters (MA periods, CCI settings)
+
+## Backtesting Frameworks
+
+The project includes two backtesting approaches:
+
+### 1. Traditional Strategy Backtest (`backtest.py`)
+- Implements MA Ribbon + CCI strategy combination
+- Supports multi-timeframe analysis
+- Includes parameter optimization
+- Generates detailed trade statistics
+- Visualizes equity curve
+- Configurable risk management
+
+### 2. RL Model Backtest (`backtest_framework.py`)
+- Tests reinforcement learning model performance
+- Supports PPO model evaluation
+- Includes drawdown analysis
+- Generates performance visualizations
+- Provides detailed metrics:
+  - Win rate
+  - Profit factor
+  - Sharpe ratio
+  - Sortino ratio
+  - Maximum drawdown
 
 ## Monitoring and Logging
 
@@ -189,17 +312,20 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Required Files
 ```
 MayesMT5-private/
-├── config.py           # Strategy parameters
-├── utils.py           # Utility functions
-├── rl_signal_writer.py # RL model implementation
-├── ma_ribbon.py       # MA ribbon implementation
-├── cci_strategy.py    # CCI strategy implementation
-├── backtest.py        # Backtesting engine
-├── requirements.txt   # Python dependencies
-├── models/           # Saved model checkpoints
-├── logs/             # Training logs
-├── data/             # Market data storage
-└── results/          # Backtest results
+├── config.py                    # Strategy parameters
+├── utils.py                     # Utility functions
+├── rl_signal_writer_torch.py    # RL model implementation
+├── ma_ribbon.py                 # MA ribbon implementation
+├── cci_strategy.py             # CCI strategy implementation
+├── backtest.py                 # Traditional strategy backtest
+├── backtest_framework.py       # RL model backtest
+├── run_backtest.py            # RL backtest runner
+├── run_traditional_backtest.py # Traditional backtest runner
+├── requirements.txt            # Python dependencies
+├── models/                    # Saved model checkpoints
+├── logs/                      # Training logs
+├── data/                      # Market data storage
+└── results/                   # Backtest results
 ```
 
 ### Configuration Parameters
@@ -226,4 +352,18 @@ RL_PARAMS = {
     'position_size': 0.1,        # 10% of account per trade
     'max_positions': 3           # Maximum concurrent positions
 }
-``` 
+```
+
+### Backtesting Results
+Both backtesting frameworks generate:
+- Performance metrics (returns, ratios)
+- Trade statistics
+- Equity curves
+- Risk metrics
+- Parameter optimization results
+
+Results are saved in the `results/` directory with:
+- Equity curve plots
+- Performance reports
+- Optimization results
+- Trade logs 

@@ -38,6 +38,7 @@ Thumbs.db
 # Project specific
 *.log
 *.txt
+!requirements.txt
 *.csv
 *.dat
 *.out
