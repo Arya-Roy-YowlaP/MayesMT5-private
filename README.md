@@ -2,6 +2,28 @@
 
 This project implements a reinforcement learning-based trading bot for MetaTrader 5, using PyTorch and Stable-Baselines3 for the RL implementation.
 
+## Quick Start
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/MayesMT5-private.git
+   cd MayesMT5-private
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   This will install all necessary packages including:
+   - MetaTrader5
+   - PyTorch
+   - Stable-Baselines3
+   - Pandas
+   - NumPy
+   - Other required libraries
+
+3. Ensure MetaTrader 5 is installed and running
+
 ## Prerequisites
 
 - Windows 10 or later
