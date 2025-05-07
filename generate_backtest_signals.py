@@ -66,10 +66,16 @@ def main():
     signals = []
     obs = env.reset()
     done = False
-    last_balance = None
+    
+    # Initialize balance tracking
+    initial_balance = 10000  # Starting with $10,000
+    current_balance = initial_balance
+    position = 0
+    entry_price = 0
 
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
+    print(f"Initial balance: ${initial_balance:,.2f}")
 
     while True:
         action, _ = model.predict(obs, deterministic=True)
@@ -78,40 +84,51 @@ def main():
         # Convert action to signal
         signal = ["HOLD", "SELL", "BUY"][action[0]]
         
-        # Get current timestamp and balance
         try:
             current_idx = env.envs[0].env.current_idx
             if current_idx < len(df):
                 timestamp = df.index[current_idx]
-                current_balance = env.envs[0].env.balance
+                current_price = df['close'].iloc[current_idx]
                 
-                # Store signal with timestamp
+                # Update balance based on position and price changes
+                if position != 0:
+                    pnl = (current_price - entry_price) * position
+                    current_balance += pnl
+                
+                # Update position if action is taken
+                if action[0] == 2 and position <= 0:  # BUY
+                    position = 1
+                    entry_price = current_price
+                elif action[0] == 1 and position >= 0:  # SELL
+                    position = -1
+                    entry_price = current_price
+                
+                # Store signal with timestamp and balance
                 signals.append({
                     'time': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                     'signal': signal,
-                    'balance': current_balance
+                    'balance': current_balance,
+                    'position': position,
+                    'price': current_price
                 })
                 
                 # Log if this is a new day
                 if timestamp.hour == 0 and timestamp.minute == 0:
-                    print(f"Processing new day: {timestamp.date()}")
+                    print(f"Processing new day: {timestamp.date()} - Balance: ${current_balance:,.2f}")
                 
                 # If done, check reason and handle accordingly
                 if done:
                     if info.get('reason') == "End of data":
                         print(f"Reached end of data at {timestamp}")
+                        print(f"Final balance: ${current_balance:,.2f}")
                         break
                     else:
                         print(f"Environment reset at {timestamp} - Reason: {info.get('reason')}")
-                        print(f"Previous balance: {current_balance}")
+                        print(f"Previous balance: ${current_balance:,.2f}")
                         # Reset environment but preserve the current index
                         obs = env.reset()
-                        # Set the balance to the last known balance
-                        env.envs[0].env.balance = current_balance
-                        print(f"Reset complete - New balance: {env.envs[0].env.balance}")
+                        # Keep the current balance and position
                         done = False
-                
-                last_balance = current_balance
                 
         except Exception as e:
             print(f"Error during signal generation: {e}")
@@ -124,7 +141,7 @@ def main():
         signals_df.to_csv(args.output_file, index=False)
         print(f"Generated {len(signals)} signals")
         print(f"Signals saved to: {args.output_file}")
-        print(f"Final balance: {last_balance}")
+        print(f"Final balance: ${current_balance:,.2f}")
     except Exception as e:
         print(f"Error saving signals: {e}")
 
