@@ -2,9 +2,12 @@ import numpy as np
 import pandas as pd
 import MetaTrader5 as mt5
 from datetime import datetime
+import gymnasium as gym
+from gymnasium import spaces
 
-class Game:
+class Game(gym.Env):
     def __init__(self, symbol="EURUSD", timeframe=mt5.TIMEFRAME_M1, window_size=10):
+        super().__init__()
         self.symbol = symbol
         self.timeframe = timeframe
         self.window_size = window_size
@@ -15,6 +18,15 @@ class Game:
         self.max_position_hold_time = 100  # Maximum number of steps to hold a position
         self.profit_threshold = 0.02  # 2% profit target
         self.loss_threshold = -0.01  # 1% stop loss
+        
+        # Define action and observation spaces
+        self.action_space = spaces.Discrete(3)  # 0: HOLD, 1: SELL, 2: BUY
+        self.observation_space = spaces.Box(
+            low=-np.inf, 
+            high=np.inf, 
+            shape=(window_size,), 
+            dtype=np.float32
+        )
         
         # Initialize MT5 if not already initialized
         if not mt5.initialize():
@@ -40,7 +52,7 @@ class Game:
         
         # Normalize the data
         state = (window - window.mean()) / (window.std() + 1e-6)
-        return state
+        return state.astype(np.float32)
     
     def step(self, action):
         """
@@ -74,40 +86,43 @@ class Game:
         # Check if we need more data
         if self.current_idx >= len(self.df) - 1:
             if not self._fetch_data():
-                return self.get_state(), reward, True
+                return self.get_state(), reward, True, False, {}
             self.current_idx = self.window_size
         
         # Get next state
         next_state = self.get_state()
         
         # Check if episode should end
-        done = False
+        terminated = False
+        truncated = False
+        info = {}
         
         # End episode if we've held a position too long
         if self.position != 0 and self.position_hold_time >= self.max_position_hold_time:
-            done = True
-            print(f"Episode ended: Position held too long ({self.position_hold_time} steps)")
+            terminated = True
+            info['reason'] = f"Position held too long ({self.position_hold_time} steps)"
         
         # End episode if we've hit profit target
         if reward >= self.profit_threshold:
-            done = True
-            print(f"Episode ended: Profit target reached ({reward*100:.2f}%)")
+            terminated = True
+            info['reason'] = f"Profit target reached ({reward*100:.2f}%)"
         
         # End episode if we've hit stop loss
         if reward <= self.loss_threshold:
-            done = True
-            print(f"Episode ended: Stop loss hit ({reward*100:.2f}%)")
+            terminated = True
+            info['reason'] = f"Stop loss hit ({reward*100:.2f}%)"
         
-        return next_state, reward, done
+        return next_state, reward, terminated, truncated, info
     
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         self.current_idx = self.window_size
         self.position = 0
         self.entry_price = 0
         self.position_hold_time = 0
         if not self._fetch_data():
-            return None
-        return self.get_state()
+            return None, {}
+        return self.get_state(), {}
     
     def close(self):
         mt5.shutdown() 

@@ -39,13 +39,25 @@ Thumbs.db
 *.log
 *.txt
 !requirements.txt
+# Ignore all CSV files except those in data folder
 *.csv
+!data/*.csv
 *.dat
 *.out
 *.pid
 *.seed
 *.pid.lock
 scratch*.txt
+*.pem
+
+# Model files
+models/
+*.pt
+*.pth
+*.zip
+*.pkl
+vec_normalize_*.pkl
+tensorboard/
 
 # MT5 specific
 *.ex5
