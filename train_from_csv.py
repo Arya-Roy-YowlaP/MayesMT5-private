@@ -217,20 +217,23 @@ def train_dqn(env, logger, save_path="models"):
     return model
 
 def train_ppo(env, logger, save_path="models"):
-    # Store the original csv_path before wrapping
+    # Store the original csv_path and window_size before wrapping
     original_csv_path = env.csv_path
+    window_size = env.window_size
     
-    # Create multiple environments for parallel training
+    # Create a function that returns a new environment instance
+    def make_env():
+        env = CSVGameEnv(csv_path=original_csv_path, window_size=window_size)
+        env = Monitor(env)
+        return env
+    
+    # Create vectorized environment with multiple instances
     n_envs = MODEL_PARAMS['n_envs']
-    envs = [CSVGameEnv(csv_path=original_csv_path, window_size=env.window_size) for _ in range(n_envs)]
-    
-    # Wrap environments
-    envs = [Monitor(env) for env in envs]
-    env = DummyVecEnv([lambda: env for env in envs])
+    env = DummyVecEnv([make_env for _ in range(n_envs)])
     env = VecNormalize(env, norm_obs=True, norm_reward=True)
     
     # Create evaluation environment
-    eval_env = CSVGameEnv(csv_path=original_csv_path, window_size=env.envs[0].env.window_size)
+    eval_env = CSVGameEnv(csv_path=original_csv_path, window_size=window_size)
     eval_env = Monitor(eval_env)
     eval_env = DummyVecEnv([lambda: eval_env])
     eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True)
