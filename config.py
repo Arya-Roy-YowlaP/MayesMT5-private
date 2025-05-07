@@ -1,9 +1,7 @@
-import MetaTrader5 as mt5
-
 # Trading Parameters
 TRADING_PARAMS = {
     'symbol': "EURUSD",
-    'timeframe': mt5.TIMEFRAME_M1,
+    'timeframe': "M1",  # Changed from mt5.TIMEFRAME_M1 to string
     'initial_balance': 10000,
     'risk_per_trade': 0.01,
     'spread': 0.0002,  # 2 pips
