@@ -121,7 +121,8 @@ def main():
                 if done:
                     # Get the reason from the base environment
                     base_env = env.envs[0].env
-                    if base_env.current_idx >= len(df) - 1:
+                    # Check if we've reached the last date in our data
+                    if timestamp.date() >= datetime(2025, 5, 7).date():
                         print(f"Reached end of data at {timestamp}")
                         print(f"Final balance: ${current_balance:,.2f}")
                         break
