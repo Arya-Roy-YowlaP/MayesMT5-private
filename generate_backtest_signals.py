@@ -95,7 +95,9 @@ def main():
             break
 
         if done:
-            if info.get('reason') == "End of data":
+            # Access the info from the base environment
+            base_env_info = env.envs[0].env.info
+            if base_env_info.get('reason') == "End of data":
                 # We've reached the end of the data, stop processing
                 break
             else:
