@@ -92,8 +92,15 @@ def main():
                 break
 
             try:
-                obs, reward, terminated, truncated, info = env.step(action)
-                done = terminated or truncated
+                step_result = env.step(action)
+                # Handle both old (4 values) and new (5 values) gym API
+                if len(step_result) == 5:
+                    obs, reward, terminated, truncated, info = step_result
+                    done = terminated or truncated
+                else:
+                    obs, reward, done, info = step_result
+                    terminated = done
+                    truncated = False
             except Exception as e:
                 print(f"Error stepping environment: {e}")
                 break
