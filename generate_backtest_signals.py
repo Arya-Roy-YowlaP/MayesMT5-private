@@ -95,9 +95,8 @@ def main():
             break
 
         if done:
-            # Access the info from the base environment
-            base_env_info = env.envs[0].env.info
-            if base_env_info.get('reason') == "End of data":
+            # Check if we've reached the end of data
+            if current_idx >= len(df) - 1:
                 # We've reached the end of the data, stop processing
                 break
             else:
