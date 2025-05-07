@@ -118,12 +118,14 @@ def main():
                 
                 # If done, check reason and handle accordingly
                 if done:
-                    if info.get('reason') == "End of data":
+                    # Get the reason from the base environment
+                    base_env = env.envs[0].env
+                    if base_env.current_idx >= len(df) - 1:
                         print(f"Reached end of data at {timestamp}")
                         print(f"Final balance: ${current_balance:,.2f}")
                         break
                     else:
-                        print(f"Environment reset at {timestamp} - Reason: {info.get('reason')}")
+                        print(f"Environment reset at {timestamp}")
                         print(f"Previous balance: ${current_balance:,.2f}")
                         # Reset environment but preserve the current index
                         obs = env.reset()
