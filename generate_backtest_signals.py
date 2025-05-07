@@ -67,6 +67,7 @@ def main():
     obs = env.reset()
     done = False
     processed_indices = set()  # Keep track of processed indices
+    last_processed_idx = env.envs[0].env.window_size  # Start after window_size
 
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
@@ -86,6 +87,7 @@ def main():
             if current_idx < len(df) and current_idx not in processed_indices:
                 timestamp = df.index[current_idx]
                 processed_indices.add(current_idx)
+                last_processed_idx = current_idx
                 
                 # Store signal with timestamp
                 signals.append({
@@ -116,6 +118,9 @@ def main():
                 if hasattr(base_env, 'last_info'):
                     reason = base_env.last_info.get('reason', 'unknown')
                 print(f"\nResetting environment at {timestamp} (reason: {reason})")
+                
+                # Reset environment but maintain the current index
+                base_env.current_idx = last_processed_idx + 1
                 obs = env.reset()
 
     # Save signals to CSV
