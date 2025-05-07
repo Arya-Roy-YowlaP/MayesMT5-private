@@ -39,6 +39,7 @@ Thumbs.db
 *.log
 *.txt
 !requirements.txt
+!requirements_ubuntu.txt
 # Ignore all CSV files except those in data folder
 *.csv
 !data/*.csv
