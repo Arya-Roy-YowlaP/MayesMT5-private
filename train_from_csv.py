@@ -220,16 +220,24 @@ def train_ppo(env, logger, save_path="models"):
     # Store the original csv_path before wrapping
     original_csv_path = env.csv_path
     
-    # Wrap the environment
-    env = Monitor(env)
-    env = DummyVecEnv([lambda: env])
+    # Create multiple environments for parallel training
+    n_envs = MODEL_PARAMS['n_envs']
+    envs = [CSVGameEnv(csv_path=original_csv_path, window_size=env.window_size) for _ in range(n_envs)]
+    
+    # Wrap environments
+    envs = [Monitor(env) for env in envs]
+    env = DummyVecEnv([lambda: env for env in envs])
     env = VecNormalize(env, norm_obs=True, norm_reward=True)
     
-    # Create evaluation environment using the original csv_path
+    # Create evaluation environment
     eval_env = CSVGameEnv(csv_path=original_csv_path, window_size=env.envs[0].env.window_size)
     eval_env = Monitor(eval_env)
     eval_env = DummyVecEnv([lambda: eval_env])
     eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True)
+    
+    # Setup tensorboard logging
+    tensorboard_log = os.path.join(save_path, "tensorboard")
+    os.makedirs(tensorboard_log, exist_ok=True)
     
     eval_callback = EvalCallback(
         eval_env,
@@ -240,6 +248,7 @@ def train_ppo(env, logger, save_path="models"):
         render=False
     )
     
+    # Create model with GPU configuration
     model = PPO(
         "MlpPolicy",
         env,
@@ -252,7 +261,9 @@ def train_ppo(env, logger, save_path="models"):
         gae_lambda=MODEL_PARAMS['gae_lambda'],
         clip_range=MODEL_PARAMS['clip_range'],
         ent_coef=MODEL_PARAMS['ent_coef'],
-        tensorboard_log=save_path
+        tensorboard_log=tensorboard_log,
+        device=MODEL_PARAMS['device'],
+        policy_kwargs=MODEL_PARAMS['policy_kwargs']
     )
     
     logger.info("Starting PPO training...")
