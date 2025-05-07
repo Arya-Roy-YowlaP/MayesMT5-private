@@ -80,7 +80,7 @@ def main():
         # Get current timestamp - access the underlying environment
         try:
             # Access the base environment through the wrapper chain
-            current_idx = env.envs[0].env.env.current_idx
+            current_idx = env.envs[0].env.current_idx
             if current_idx < len(df):
                 timestamp = df.index[current_idx]
                 
