@@ -216,11 +216,16 @@ def train_dqn(env, logger, save_path="models"):
     return model
 
 def train_ppo(env, logger, save_path="models"):
+    # Store the original csv_path before wrapping
+    original_csv_path = env.csv_path
+    
+    # Wrap the environment
     env = Monitor(env)
     env = DummyVecEnv([lambda: env])
     env = VecNormalize(env, norm_obs=True, norm_reward=True)
     
-    eval_env = CSVGameEnv(env.envs[0].csv_path, env.envs[0].window_size)
+    # Create evaluation environment using the original csv_path
+    eval_env = CSVGameEnv(csv_path=original_csv_path, window_size=env.envs[0].env.window_size)
     eval_env = Monitor(eval_env)
     eval_env = DummyVecEnv([lambda: eval_env])
     eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True)
