@@ -66,31 +66,55 @@ def main():
     signals = []
     obs = env.reset()
     done = False
+    last_balance = None
 
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
 
-    while not done:
+    while True:
         action, _ = model.predict(obs, deterministic=True)
-        obs, _, done, _ = env.step(action)
+        obs, reward, done, info = env.step(action)
         
         # Convert action to signal
         signal = ["HOLD", "SELL", "BUY"][action[0]]
         
-        # Get current timestamp - access the underlying environment
+        # Get current timestamp and balance
         try:
-            # Access the base environment through the wrapper chain
             current_idx = env.envs[0].env.current_idx
             if current_idx < len(df):
                 timestamp = df.index[current_idx]
+                current_balance = env.envs[0].env.balance
                 
                 # Store signal with timestamp
                 signals.append({
                     'time': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                    'signal': signal
+                    'signal': signal,
+                    'balance': current_balance
                 })
+                
+                # Log if this is a new day
+                if timestamp.hour == 0 and timestamp.minute == 0:
+                    print(f"Processing new day: {timestamp.date()}")
+                
+                # If done, check reason and handle accordingly
+                if done:
+                    if info.get('reason') == "End of data":
+                        print(f"Reached end of data at {timestamp}")
+                        break
+                    else:
+                        print(f"Environment reset at {timestamp} - Reason: {info.get('reason')}")
+                        print(f"Previous balance: {current_balance}")
+                        # Reset environment but preserve the current index
+                        obs = env.reset()
+                        # Set the balance to the last known balance
+                        env.envs[0].env.balance = current_balance
+                        print(f"Reset complete - New balance: {env.envs[0].env.balance}")
+                        done = False
+                
+                last_balance = current_balance
+                
         except Exception as e:
-            print(f"Error accessing current_idx: {e}")
+            print(f"Error during signal generation: {e}")
             print("Environment structure:", type(env), type(env.envs[0]), type(env.envs[0].env))
             break
 
@@ -100,6 +124,7 @@ def main():
         signals_df.to_csv(args.output_file, index=False)
         print(f"Generated {len(signals)} signals")
         print(f"Signals saved to: {args.output_file}")
+        print(f"Final balance: {last_balance}")
     except Exception as e:
         print(f"Error saving signals: {e}")
 
