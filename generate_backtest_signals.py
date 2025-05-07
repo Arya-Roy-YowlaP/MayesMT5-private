@@ -108,7 +108,12 @@ def main():
                 print("\nReached end of data. Finalizing...")
                 break
             else:
-                print(f"\nResetting environment at {timestamp} (reason: {info.get('reason', 'unknown')})")
+                # Get the reason from the base environment's info
+                base_env = env.envs[0].env
+                reason = "unknown"
+                if hasattr(base_env, 'last_info'):
+                    reason = base_env.last_info.get('reason', 'unknown')
+                print(f"\nResetting environment at {timestamp} (reason: {reason})")
                 obs = env.reset()
 
     # Save signals to CSV
