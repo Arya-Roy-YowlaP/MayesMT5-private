@@ -42,8 +42,8 @@ def main():
         return
 
     # Create environment
-    env = CSVGameEnv(csv_path=args.data_file, window_size=30)
-    env = Monitor(env)
+    base_env = CSVGameEnv(csv_path=args.data_file, window_size=30)
+    env = Monitor(base_env)
     env = DummyVecEnv([lambda: env])
     
     # Load vector normalization
@@ -57,7 +57,7 @@ def main():
 
     # Load model
     try:
-        model = PPO.load(args.model_path, env=env)
+        model = PPO.load(args.model_path, env=env, device='cpu')  # Force CPU usage
     except Exception as e:
         print(f"Error loading model: {e}")
         return
@@ -77,16 +77,22 @@ def main():
         # Convert action to signal
         signal = ["HOLD", "SELL", "BUY"][action[0]]
         
-        # Get current timestamp
-        current_idx = env.envs[0].current_idx
-        if current_idx < len(df):
-            timestamp = df.index[current_idx]
-            
-            # Store signal with timestamp
-            signals.append({
-                'time': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                'signal': signal
-            })
+        # Get current timestamp - access the underlying environment
+        try:
+            # Access the base environment through the wrapper chain
+            current_idx = env.envs[0].env.env.current_idx
+            if current_idx < len(df):
+                timestamp = df.index[current_idx]
+                
+                # Store signal with timestamp
+                signals.append({
+                    'time': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                    'signal': signal
+                })
+        except Exception as e:
+            print(f"Error accessing current_idx: {e}")
+            print("Environment structure:", type(env), type(env.envs[0]), type(env.envs[0].env))
+            break
 
     # Save signals to CSV
     try:
