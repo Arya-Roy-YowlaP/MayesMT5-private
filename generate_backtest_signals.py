@@ -144,7 +144,9 @@ def main():
                     if done:
                         # Get the reason from the base environment
                         base_env = env.envs[0].env
-                        if info and info.get('reason') == "End of data":
+                        # Handle info being a list
+                        info_dict = info[0] if isinstance(info, list) else info
+                        if info_dict and info_dict.get('reason') == "End of data":
                             print(f"Reached end of data at {timestamp}")
                             print(f"Final balance: ${current_balance:,.2f}")
                             break
