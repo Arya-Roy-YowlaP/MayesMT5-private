@@ -66,6 +66,7 @@ def main():
     signals = []
     obs = env.reset()
     done = False
+    processed_indices = set()  # Keep track of processed indices
 
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
@@ -82,8 +83,9 @@ def main():
         try:
             # Access the base environment through the wrapper chain
             current_idx = env.envs[0].env.current_idx
-            if current_idx < len(df):
+            if current_idx < len(df) and current_idx not in processed_indices:
                 timestamp = df.index[current_idx]
+                processed_indices.add(current_idx)
                 
                 # Store signal with timestamp
                 signals.append({
@@ -119,6 +121,9 @@ def main():
     # Save signals to CSV
     try:
         signals_df = pd.DataFrame(signals)
+        # Sort by timestamp to ensure chronological order
+        signals_df['time'] = pd.to_datetime(signals_df['time'])
+        signals_df = signals_df.sort_values('time')
         signals_df.to_csv(args.output_file, index=False)
         print(f"\nGenerated {len(signals)} signals")
         print(f"Signals saved to: {args.output_file}")
