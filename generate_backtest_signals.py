@@ -121,6 +121,7 @@ def main():
                 
                 # Create a new environment with the correct starting index
                 base_env = CSVGameEnv(csv_path=args.data_file, window_size=30)
+                base_env.df = df  # Use the already loaded DataFrame
                 base_env.current_idx = last_processed_idx + 1
                 env = Monitor(base_env)
                 env = DummyVecEnv([lambda: env])
