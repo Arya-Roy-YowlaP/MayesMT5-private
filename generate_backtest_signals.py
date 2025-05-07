@@ -66,16 +66,13 @@ def main():
     signals = []
     obs = env.reset()
     done = False
-    processed_indices = set()  # Keep track of processed indices
-    last_processed_idx = env.envs[0].env.window_size  # Start after window_size
 
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
-    print("Starting signal generation...")
 
-    while True:
+    while not done:
         action, _ = model.predict(obs, deterministic=True)
-        obs, _, done, info = env.step(action)
+        obs, _, done, _ = env.step(action)
         
         # Convert action to signal
         signal = ["HOLD", "SELL", "BUY"][action[0]]
@@ -84,60 +81,24 @@ def main():
         try:
             # Access the base environment through the wrapper chain
             current_idx = env.envs[0].env.current_idx
-            if current_idx < len(df) and current_idx not in processed_indices:
+            if current_idx < len(df):
                 timestamp = df.index[current_idx]
-                processed_indices.add(current_idx)
-                last_processed_idx = current_idx
                 
                 # Store signal with timestamp
                 signals.append({
                     'time': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                     'signal': signal
                 })
-
-                # Print progress every 1000 candles
-                if len(signals) % 1000 == 0:
-                    progress = (len(signals) / len(df)) * 100
-                    print(f"Progress: {len(signals)}/{len(df)} signals generated ({progress:.1f}%)")
-                    print(f"Current date: {timestamp}")
-
         except Exception as e:
             print(f"Error accessing current_idx: {e}")
             print("Environment structure:", type(env), type(env.envs[0]), type(env.envs[0].env))
             break
 
-        if done:
-            # Check if we've reached the end of data
-            if current_idx >= len(df) - 1:
-                print("\nReached end of data. Finalizing...")
-                break
-            else:
-                # Get the reason from the base environment's info
-                base_env = env.envs[0].env
-                reason = "unknown"
-                if hasattr(base_env, 'last_info'):
-                    reason = base_env.last_info.get('reason', 'unknown')
-                print(f"\nResetting environment at {timestamp} (reason: {reason})")
-                
-                # Create a new environment with the correct starting index
-                base_env = CSVGameEnv(csv_path=args.data_file, window_size=30)
-                base_env.df = df  # Use the already loaded DataFrame
-                base_env.current_idx = last_processed_idx + 1
-                env = Monitor(base_env)
-                env = DummyVecEnv([lambda: env])
-                env = VecNormalize.load(args.vec_normalize_path, env)
-                env.training = False
-                env.norm_reward = False
-                obs = env.reset()
-
     # Save signals to CSV
     try:
         signals_df = pd.DataFrame(signals)
-        # Sort by timestamp to ensure chronological order
-        signals_df['time'] = pd.to_datetime(signals_df['time'])
-        signals_df = signals_df.sort_values('time')
         signals_df.to_csv(args.output_file, index=False)
-        print(f"\nGenerated {len(signals)} signals")
+        print(f"Generated {len(signals)} signals")
         print(f"Signals saved to: {args.output_file}")
     except Exception as e:
         print(f"Error saving signals: {e}")
