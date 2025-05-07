@@ -119,8 +119,14 @@ def main():
                     reason = base_env.last_info.get('reason', 'unknown')
                 print(f"\nResetting environment at {timestamp} (reason: {reason})")
                 
-                # Reset environment but maintain the current index
+                # Create a new environment with the correct starting index
+                base_env = CSVGameEnv(csv_path=args.data_file, window_size=30)
                 base_env.current_idx = last_processed_idx + 1
+                env = Monitor(base_env)
+                env = DummyVecEnv([lambda: env])
+                env = VecNormalize.load(args.vec_normalize_path, env)
+                env.training = False
+                env.norm_reward = False
                 obs = env.reset()
 
     # Save signals to CSV
