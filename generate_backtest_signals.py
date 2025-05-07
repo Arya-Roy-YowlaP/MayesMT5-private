@@ -70,9 +70,9 @@ def main():
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
 
-    while not done:
+    while True:
         action, _ = model.predict(obs, deterministic=True)
-        obs, _, done, _ = env.step(action)
+        obs, _, done, info = env.step(action)
         
         # Convert action to signal
         signal = ["HOLD", "SELL", "BUY"][action[0]]
@@ -93,6 +93,14 @@ def main():
             print(f"Error accessing current_idx: {e}")
             print("Environment structure:", type(env), type(env.envs[0]), type(env.envs[0].env))
             break
+
+        if done:
+            if info.get('reason') == "End of data":
+                # We've reached the end of the data, stop processing
+                break
+            else:
+                # Reset the environment for the next segment
+                obs = env.reset()
 
     # Save signals to CSV
     try:
