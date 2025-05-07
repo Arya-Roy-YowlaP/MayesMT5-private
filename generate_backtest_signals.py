@@ -69,6 +69,7 @@ def main():
 
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
+    print("Starting signal generation...")
 
     while True:
         action, _ = model.predict(obs, deterministic=True)
@@ -89,6 +90,13 @@ def main():
                     'time': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                     'signal': signal
                 })
+
+                # Print progress every 1000 candles
+                if len(signals) % 1000 == 0:
+                    progress = (len(signals) / len(df)) * 100
+                    print(f"Progress: {len(signals)}/{len(df)} signals generated ({progress:.1f}%)")
+                    print(f"Current date: {timestamp}")
+
         except Exception as e:
             print(f"Error accessing current_idx: {e}")
             print("Environment structure:", type(env), type(env.envs[0]), type(env.envs[0].env))
@@ -97,17 +105,17 @@ def main():
         if done:
             # Check if we've reached the end of data
             if current_idx >= len(df) - 1:
-                # We've reached the end of the data, stop processing
+                print("\nReached end of data. Finalizing...")
                 break
             else:
-                # Reset the environment for the next segment
+                print(f"\nResetting environment at {timestamp} (reason: {info.get('reason', 'unknown')})")
                 obs = env.reset()
 
     # Save signals to CSV
     try:
         signals_df = pd.DataFrame(signals)
         signals_df.to_csv(args.output_file, index=False)
-        print(f"Generated {len(signals)} signals")
+        print(f"\nGenerated {len(signals)} signals")
         print(f"Signals saved to: {args.output_file}")
     except Exception as e:
         print(f"Error saving signals: {e}")
