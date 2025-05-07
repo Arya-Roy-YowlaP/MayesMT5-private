@@ -20,6 +20,7 @@ from visualization import plot_training_progress
 class CSVGameEnv(gym.Env):
     def __init__(self, csv_path, window_size=10):
         super().__init__()
+        self.csv_path = csv_path  # Store csv_path as instance variable
         self.window_size = window_size
         self.current_idx = window_size
         self.position = 0
