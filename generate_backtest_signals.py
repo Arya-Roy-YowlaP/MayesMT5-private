@@ -72,6 +72,7 @@ def main():
     current_balance = initial_balance
     position = 0
     entry_price = 0
+    last_processed_idx = 30  # Start after window_size
 
     print(f"Generating signals for {args.data_file}")
     print(f"Total candles: {len(df)}")
@@ -129,8 +130,12 @@ def main():
                         print(f"Previous balance: ${current_balance:,.2f}")
                         # Reset environment but preserve the current index
                         obs = env.reset()
+                        # Set the current index to continue from where we left off
+                        base_env.current_idx = last_processed_idx
                         # Keep the current balance and position
                         done = False
+                
+                last_processed_idx = current_idx
                 
         except Exception as e:
             print(f"Error during signal generation: {e}")
