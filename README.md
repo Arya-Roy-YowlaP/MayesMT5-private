@@ -389,3 +389,83 @@ Results are saved in the `results/` directory with:
 - Performance reports
 - Optimization results
 - Trade logs 
+
+# RL Trading System Workflow
+
+This repository contains a Reinforcement Learning (RL) based trading system for MetaTrader 5. The system uses PPO (Proximal Policy Optimization) algorithm for training and generating trading signals.
+
+## Workflow Overview
+
+The system follows these steps:
+
+1. **Data Extraction**
+   - Use `export_mt5_data.py` to extract historical data from MT5
+   - This script exports price data in a format suitable for training
+
+2. **Model Training**
+   - Use `train_from_csv.py` to train the PPO model
+   - The training process uses the exported historical data
+   - Model checkpoints are saved during training
+
+3. **Signal Generation**
+   - Use `generate_backtest_signals.py` to generate trading signals
+   - This script uses the trained model to create backtest signals
+   - Outputs signals in a format compatible with MT5
+
+4. **Live Testing**
+   - Use `rl_signal_writer_torch.py` for live testing
+   - This script writes real-time signals for the MT5 EA to use
+   - The EA (`RL_Trading_EA.mq5`) reads these signals and executes trades
+
+## File Structure
+
+- `export_mt5_data.py`: Extracts historical data from MT5
+- `train_from_csv.py`: Trains the PPO model on historical data
+- `generate_backtest_signals.py`: Generates backtest signals using trained model
+- `rl_signal_writer_torch.py`: Writes live signals for MT5 EA
+- `RL_Trading_EA.mq5`: MetaTrader 5 Expert Advisor that executes trades based on signals
+
+## Setup and Usage
+
+1. **Data Extraction**
+   ```bash
+   python export_mt5_data.py
+   ```
+
+2. **Model Training**
+   ```bash
+   python train_from_csv.py
+   ```
+
+3. **Signal Generation**
+   ```bash
+   python generate_backtest_signals.py
+   ```
+
+4. **Live Testing**
+   ```bash
+   python rl_signal_writer_torch.py
+   ```
+
+## Requirements
+
+- Python 3.x
+- PyTorch
+- MetaTrader 5
+- Required Python packages (specified in requirements.txt)
+
+## Notes
+
+- Make sure MT5 is running when using the EA
+- Place the EA in the correct MT5 directory
+- Ensure all required files are in the correct locations
+- Monitor the system logs for any issues
+
+## Troubleshooting
+
+If you encounter issues:
+1. Check if MT5 is running
+2. Verify file paths and permissions
+3. Check the logs for error messages
+4. Ensure all dependencies are installed
+5. Verify the model files are in the correct location 
