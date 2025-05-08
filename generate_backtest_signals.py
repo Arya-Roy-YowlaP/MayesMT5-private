@@ -27,6 +27,32 @@ def parse_arguments():
     
     return parser.parse_args()
 
+def clean_signals_dataframe(df):
+    """
+    Clean the signals dataframe by removing any rows where the timestamp is prior to the previous row.
+    This ensures chronological order in the signals.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing signals with 'time' column
+        
+    Returns:
+        pd.DataFrame: Cleaned DataFrame with only chronologically ordered signals
+    """
+    if df.empty:
+        return df
+        
+    # Convert time column to datetime if it's not already
+    df['time'] = pd.to_datetime(df['time'])
+    
+    # Sort by time to ensure chronological order
+    df = df.sort_values('time')
+    
+    # Keep only rows where current time is greater than or equal to previous time
+    mask = df['time'] >= df['time'].shift(1)
+    mask.iloc[0] = True  # Keep the first row
+    
+    return df[mask]
+
 def main():
     # Parse command line arguments
     args = parse_arguments()
@@ -172,8 +198,11 @@ def main():
         try:
             if signals:  # Only save if we have signals
                 signals_df = pd.DataFrame(signals)
+                # Clean the signals dataframe before saving
+                signals_df = clean_signals_dataframe(signals_df)
                 signals_df.to_csv(args.output_file, index=False)
                 print(f"Generated {len(signals)} signals")
+                print(f"Cleaned signals count: {len(signals_df)}")
                 print(f"Signals saved to: {args.output_file}")
                 print(f"Final balance: ${current_balance:,.2f}")
             else:
