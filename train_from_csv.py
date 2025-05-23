@@ -213,21 +213,21 @@ class Game(object):
 
         # Add entry/exit signals based on all timeframes
         entry_signal = 0
-        if (indicators_4h[-2] == 1 and indicators_1d[-2] == 1 and  # Ribbon formation on higher timeframes
+        if (indicators_4h[-2] == 1 and indicators_1d[-2] == 1 and \ # Ribbon formation on higher timeframes
             indicators_30m[-2] == 1 and  # Ribbon formation on entry timeframe
-            indicators_4h[-1] == 1 and indicators_1d[-1] == 1 and  # CCI conditions on higher timeframes
+            indicators_4h[-1] == 1 and indicators_1d[-1] == 1 and \ # CCI conditions on higher timeframes
             indicators_30m[-1] == 1):  # CCI conditions on entry timeframe
             entry_signal = 1  # Buy signal
-        elif (indicators_4h[-2] == -1 and indicators_1d[-2] == -1 and  # Ribbon formation on higher timeframes
+        elif (indicators_4h[-2] == -1 and indicators_1d[-2] == -1 and \ # Ribbon formation on higher timeframes
               indicators_30m[-2] == -1 and  # Ribbon formation on entry timeframe
-              indicators_4h[-1] == -1 and indicators_1d[-1] == -1 and  # CCI conditions on higher timeframes
+              indicators_4h[-1] == -1 and indicators_1d[-1] == -1 and \ # CCI conditions on higher timeframes
               indicators_30m[-1] == -1):  # CCI conditions on entry timeframe
             entry_signal = -1  # Sell signal
 
         # Exit signal based on ribbon direction change on lowest timeframe
         exit_signal = 0
         if self.position != 0:  # Only check exit if we have a position
-            if (self.position == 1 and indicators_30m[-2] == -1) or  # Long position and ribbon turns bearish
+            if (self.position == 1 and indicators_30m[-2] == -1) or \ # Long position and ribbon turns bearish
                (self.position == -1 and indicators_30m[-2] == 1):  # Short position and ribbon turns bullish
                 exit_signal = 1
 
