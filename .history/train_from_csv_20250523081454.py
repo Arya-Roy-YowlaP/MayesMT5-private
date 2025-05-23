@@ -208,7 +208,7 @@ class Game(object):
         obs = np.array(self.state, dtype=np.float32)
         info = {}
         return obs, info
-
+        
 class GameGymWrapper(gym.Env):
     def __init__(self, game_instance):
         super().__init__()
@@ -355,8 +355,8 @@ def train_ppo(env, logger, save_path="models"):
             lkbk,
             init_idx
         )
-        wrapped = GameGymWrapper(game)
-        env = Monitor(wrapped)
+        
+        env = Monitor(env)
         return env
     
     # Create vectorized environment with multiple instances
