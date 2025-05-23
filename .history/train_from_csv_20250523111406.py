@@ -55,7 +55,6 @@ class Game(object):
         self.last_reset_date = None
         self.curr_idx = self.init_idx
         self.position = 0
-        self.reset()
         self.action_space = spaces.Discrete(3)
         self.observation_space = spaces.Box(low=-1e6, high=1e6, shape=(len(self.get_state()),), dtype=np.float32)
         
