@@ -346,14 +346,7 @@ def train_ppo(env, logger, save_path="models"):
     env = VecNormalize(env, norm_obs=True, norm_reward=True)
     
     # Create evaluation environment
-    eval_env = Game(
-            bars30m,
-            bars4h, 
-            bars1d,
-            reward_function,
-            lkbk,
-            init_idx
-        )
+    eval_env = CSVGameEnv(csv_path=original_csv_path, window_size=window_size)
     eval_env = Monitor(eval_env)
     eval_env = DummyVecEnv([lambda: eval_env])
     eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True)

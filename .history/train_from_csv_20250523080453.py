@@ -325,7 +325,12 @@ def train_dqn(env, logger, save_path="models"):
 
 def train_ppo(env, logger, save_path="models"):
     # Store the original csv_path and window_size before wrapping
-    bars30m,bars4h,bars1d,reward_function,lkbk,init_idx = env.bars30m,env.bars4h,env.bars1d,env.reward_function,env.lkbk,env.init_idx
+    bars30m,
+            bars4h=, 
+            bars1d,
+            reward_function,
+            lkbk,
+            init_idx
     # Create a function that returns a new environment instance
     def make_env():
         env = Game(
@@ -346,14 +351,7 @@ def train_ppo(env, logger, save_path="models"):
     env = VecNormalize(env, norm_obs=True, norm_reward=True)
     
     # Create evaluation environment
-    eval_env = Game(
-            bars30m,
-            bars4h, 
-            bars1d,
-            reward_function,
-            lkbk,
-            init_idx
-        )
+    eval_env = CSVGameEnv(csv_path=original_csv_path, window_size=window_size)
     eval_env = Monitor(eval_env)
     eval_env = DummyVecEnv([lambda: eval_env])
     eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True)
