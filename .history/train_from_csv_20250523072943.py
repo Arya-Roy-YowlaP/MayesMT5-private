@@ -467,8 +467,7 @@ def main():
             bars4h=df4h, 
             bars1d=df1d,
             reward_function=reward_function,
-            lkbk=50,
-            init_idx= 51
+            lkbk=ENV_PARAMS['window_size']
         )
         
         # Train model

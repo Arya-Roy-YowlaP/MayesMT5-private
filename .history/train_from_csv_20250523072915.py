@@ -97,8 +97,7 @@ class Game(object):
             tech_ind = np.array([]
 
             sma_values = [talib.SMA(bars['close'], timeperiod=1)[-1-shift] for shift in range(5)]
-            for sma in sma_values: 
-                tech_ind = np.append(tech_ind, sma)
+            for sma in sma_values: tech_ind = np.append(tech_ind, sma)
             sma50 = talib.SMA(bars['close'], timeperiod=50)[-1]; tech_ind = np.append(tech_ind, sma50)
             cci1 = talib.CCI(bars['high'], bars['low'], bars['close'], timeperiod=20); cci1_sma = talib.SMA(cci1, timeperiod=20)[-1]
             tech_ind = np.append(tech_ind, cci1[-1]); tech_ind = np.append(tech_ind, cci1_sma)
@@ -467,8 +466,7 @@ def main():
             bars4h=df4h, 
             bars1d=df1d,
             reward_function=reward_function,
-            lkbk=50,
-            init_idx= 51
+            lkbk=ENV_PARAMS['window_size']
         )
         
         # Train model
