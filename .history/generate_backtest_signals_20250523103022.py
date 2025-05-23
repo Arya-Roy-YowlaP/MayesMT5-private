@@ -158,7 +158,7 @@ def main():
     last_processed_idx = 30  # Start after window_size
 
     print(f"Generating signals for {args.symbol}")
-    # print(f"Total candles: {len(df)}")
+    print(f"Total candles: {len(df)}")
     print(f"Initial balance: ${initial_balance:,.2f}")
 
     try:
