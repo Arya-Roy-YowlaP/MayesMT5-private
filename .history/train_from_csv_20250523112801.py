@@ -221,7 +221,6 @@ class Game(object):
             self.last_reset_date = self.curr_time.date()
         self._assemble_state()
         obs = np.array(self.state, dtype=np.float32)
-        assert obs.shape == self.observation_space.shape
         info = {}
         return obs, info
 
@@ -372,7 +371,6 @@ def train_ppo(env, logger, save_path="models"):
             lkbk,
             init_idx
         )
-        env.reset()
         wrapped = GameGymWrapper(env)
         env = Monitor(wrapped)
         return env
