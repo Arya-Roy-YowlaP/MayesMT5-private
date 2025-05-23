@@ -218,7 +218,7 @@ class Game(object):
              # Ribbon formation on entry timeframe
              
               # CCI conditions on higher timeframes
-            :  # CCI conditions on entry timeframe
+            # CCI conditions on entry timeframe
             entry_signal = 1  # Buy signal
         elif (indicators_4h[-2] == -1 and indicators_1d[-2] == -1 and indicators_30m[-2] == -1 and indicators_4h[-1] == -1 and indicators_1d[-1] == -1 and indicators_30m[-1] == -1):# Ribbon formation on higher timeframes
                 # Ribbon formation on entry timeframe
