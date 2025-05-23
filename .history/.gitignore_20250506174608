@@ -56,8 +56,6 @@ models/
 *.pt
 *.pth
 *.zip
-*.tar
-*.tar.gz
 *.pkl
 vec_normalize_*.pkl
 tensorboard/
