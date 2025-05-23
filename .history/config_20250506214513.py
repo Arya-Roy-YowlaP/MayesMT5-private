@@ -19,10 +19,10 @@ MODEL_PARAMS = {
     'clip_range': 0.2,
     'ent_coef': 0.01,
     'total_timesteps': 50000,
-    'device': 'cpu',  # Force GPU usage
+    'device': 'cuda',  # Force GPU usage
     'n_envs': 8,  # Number of parallel environments
     'policy_kwargs': {
-        'net_arch': dict(pi=[256, 256], vf=[256, 256])  # Larger network for GPU
+        'net_arch': [dict(pi=[256, 256], vf=[256, 256])]  # Larger network for GPU
     }
 }
 
