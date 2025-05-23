@@ -214,7 +214,7 @@ class GameGymWrapper(gym.Env):
         super().__init__()
         self.game = game_instance
         self.action_space = spaces.Discrete(3)
-        self.observation_space = spaces.Box(low=-1e6, high=1e6, shape=(219,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1e6, high=1e6, shape=(16,), dtype=np.float32)
 
     def reset(self, *, seed=None, options=None):
         obs, _ = self.game.reset()
