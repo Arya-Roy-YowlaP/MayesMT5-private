@@ -6,31 +6,11 @@ import torch.nn as nn
 import argparse
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
-from train_from_csv import Game, GameGymWrapper
-from stable_baselines3.common.monitor import Monitor
-
-def reward_function(entry_price, exit_price, position, daily_profit, daily_loss, daily_profit_target=100, daily_max_loss=-50):
-    # Trade PnL: positive if profitable, negative if not
-    pnl = (exit_price - entry_price) * position  # position = 1 for long, -1 for short
-
-    # Basic reward is realized PnL
-    reward = pnl
-
-    # Daily profit bonus
-    if daily_profit >= daily_profit_target:
-        reward += 10  # bonus for hitting daily target
-
-    # Daily loss penalty
-    if daily_loss <= daily_max_loss:
-        reward -= 10  # penalty for exceeding daily loss
-
-    return reward
-
+from train_from_csv import CSVGameEnv, Monitor
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Generate trading signals for backtesting RL strategy')
     
-    parser.add_argument('--symbol', type=str, default='EURUSD', help='Trading symbol (default: EURUSD)')
     
     # Model parameters
     parser.add_argument('--model-path', type=str, required=True,
@@ -70,45 +50,9 @@ def clean_signals_dataframe(df):
     
     return df[mask]
 
-def load_mt5_data(symbol='EURUSD', timeframes=['M30', 'H4', 'D1']):
-    """
-    Load data from MT5 exported CSV files and prepare it for the Game environment.
-    
-    Args:
-        symbol (str): Trading symbol (default: 'EURUSD')
-        timeframes (list): List of timeframes to load (default: ['M30', 'H4', 'D1'])
-        start_date (str): Start date in YYYY-MM-DD format
-        end_date (str): End date in YYYY-MM-DD format
-        count (int): Number of candles to load
-        
-    Returns:
-        tuple: (bars30m, bars4h, bars1d) pandas DataFrames with OHLCV data
-    """
-    
-    # Load data for each timeframe
-    data = {}
-    for tf in timeframes:
-        filename = f"data/{symbol}_{tf.lower()}.csv"
-        try:
-            df = pd.read_csv(filename)
-            df['time'] = pd.to_datetime(df['time'])
-            df.set_index('time', inplace=True)
-            
-            
-            
-            data[tf] = df
-        except Exception as e:
-            print(f"Error loading data for {symbol} {tf}: {e}")
-            return None, None, None
-    
-    # Return data in the format expected by Game
-    return data['M30'], data['H4'], data['D1']
-
 def main():
     # Parse command line arguments
     args = parse_arguments()
-
-    df30m, df4h, df1d = load_mt5_data(args.symbol, ['M30', 'H4', 'D1'], )
     
     # Load data
     try:
@@ -122,16 +66,8 @@ def main():
 
     # Create environment
     try:
-        env = Game(
-            bars30m=df30m,
-            bars4h=df4h, 
-            bars1d=df1d,
-            reward_function=reward_function,
-            lkbk=100,
-            init_idx= 101
-        )
-        env = GameGymWrapper(env)
-        env = Monitor(env)
+        base_env = CSVGameEnv(csv_path=args.data_file, window_size=30)
+        env = Monitor(base_env)
         env = DummyVecEnv([lambda: env])
     except Exception as e:
         print(f"Error creating environment: {e}")

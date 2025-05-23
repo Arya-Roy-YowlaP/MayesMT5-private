@@ -130,8 +130,7 @@ def main():
             lkbk=100,
             init_idx= 101
         )
-        env = GameGymWrapper(env)
-        env = Monitor(env)
+        env = Monitor(base_env)
         env = DummyVecEnv([lambda: env])
     except Exception as e:
         print(f"Error creating environment: {e}")

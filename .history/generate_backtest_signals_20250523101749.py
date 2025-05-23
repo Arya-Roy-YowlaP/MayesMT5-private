@@ -6,26 +6,7 @@ import torch.nn as nn
 import argparse
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
-from train_from_csv import Game, GameGymWrapper
-from stable_baselines3.common.monitor import Monitor
-
-def reward_function(entry_price, exit_price, position, daily_profit, daily_loss, daily_profit_target=100, daily_max_loss=-50):
-    # Trade PnL: positive if profitable, negative if not
-    pnl = (exit_price - entry_price) * position  # position = 1 for long, -1 for short
-
-    # Basic reward is realized PnL
-    reward = pnl
-
-    # Daily profit bonus
-    if daily_profit >= daily_profit_target:
-        reward += 10  # bonus for hitting daily target
-
-    # Daily loss penalty
-    if daily_loss <= daily_max_loss:
-        reward -= 10  # penalty for exceeding daily loss
-
-    return reward
-
+from train_from_csv import CSVGameEnv, Monitor
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Generate trading signals for backtesting RL strategy')
@@ -130,8 +111,7 @@ def main():
             lkbk=100,
             init_idx= 101
         )
-        env = GameGymWrapper(env)
-        env = Monitor(env)
+        env = Monitor(base_env)
         env = DummyVecEnv([lambda: env])
     except Exception as e:
         print(f"Error creating environment: {e}")
