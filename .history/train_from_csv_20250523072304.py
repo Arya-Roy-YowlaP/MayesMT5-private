@@ -95,13 +95,6 @@ class Game(object):
         self.state = np.append(self.state, _get_normalised_bars_array(self.last1d))
         def _get_technical_indicators(bars):
             tech_ind = np.array([])
-            print("\n==== DEBUG bars ====")
-            print("Type:", type(bars))
-            print("Shape:", bars.shape if hasattr(bars, "shape") else "N/A")
-            print("Columns:", bars.columns if hasattr(bars, "columns") else "N/A")
-            print("Head:\n", bars.head() if hasattr(bars, "head") else bars)
-            print("Any NaN in 'close'? :", bars['close'].isnull().any() if 'close' in bars else "No 'close' column")
-            print("==== END DEBUG ====\n")
             print("\n----DEBUG bars['close']----")
             print("Type:", type(bars['close']))
             print("Length:", len(bars['close']))
