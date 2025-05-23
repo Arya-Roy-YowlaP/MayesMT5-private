@@ -221,7 +221,7 @@ class Game(object):
               # CCI conditions on higher timeframes
               # CCI conditions on entry timeframe
             entry_signal = 1  # Buy signal
-        elif (indicators_4h[-2] == -1 and indicators_1d[-2] == -1 and indicators_30m[-2] == -1 and indicators_4h[-1] == -1 and indicators_1d[-1] == -1 and indicators_30m[-1] == -1):# Ribbon formation on higher timeframes
+        elif (indicators_4h[-2] == -1 and indicators_1d[-2] == -1 and indicators_30m[-2] == -1 and indicators_4h[-1] == -1 and indicators_1d[-1] == -1 and# Ribbon formation on higher timeframes
                 # Ribbon formation on entry timeframe
                # CCI conditions on higher timeframes
                 # CCI conditions on entry timeframe
@@ -230,8 +230,8 @@ class Game(object):
         # Exit signal based on ribbon direction change on lowest timeframe
         exit_signal = 0
         if self.position != 0:  # Only check exit if we have a position
-            if (self.position == 1 and indicators_30m[-2] == -1) or (self.position == -1 and indicators_30m[-2] == 1): # Long position and ribbon turns bearish
-                 # Short position and ribbon turns bullish
+            if (self.position == 1 and indicators_30m[-2] == -1) or \ # Long position and ribbon turns bearish
+               (self.position == -1 and indicators_30m[-2] == 1):  # Short position and ribbon turns bullish
                 exit_signal = 1
 
         # Add entry/exit signals to state
@@ -600,7 +600,7 @@ def main():
     logger = setup_logging('train_from_csv')
     create_directories()
     
-    # try:
+    try:
         parser = argparse.ArgumentParser(description='Train a DQN or PPO model from CSV data')
         parser.add_argument('--algorithm', type=str, default='dqn', choices=['dqn', 'ppo'], help='Algorithm to use (dqn or ppo)')
         parser.add_argument('--symbol', type=str, default='EURUSD', help='Trading symbol (default: EURUSD)')
@@ -624,8 +624,8 @@ def main():
         
         logger.info("Training completed successfully!")
         
-    # except Exception as e:
-    #     logger.error(f"Error during training: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error during training: {str(e)}")
 
 if __name__ == "__main__":
     main() 

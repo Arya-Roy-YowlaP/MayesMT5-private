@@ -600,7 +600,7 @@ def main():
     logger = setup_logging('train_from_csv')
     create_directories()
     
-    # try:
+    try:
         parser = argparse.ArgumentParser(description='Train a DQN or PPO model from CSV data')
         parser.add_argument('--algorithm', type=str, default='dqn', choices=['dqn', 'ppo'], help='Algorithm to use (dqn or ppo)')
         parser.add_argument('--symbol', type=str, default='EURUSD', help='Trading symbol (default: EURUSD)')
@@ -624,8 +624,8 @@ def main():
         
         logger.info("Training completed successfully!")
         
-    # except Exception as e:
-    #     logger.error(f"Error during training: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error during training: {str(e)}")
 
 if __name__ == "__main__":
     main() 
