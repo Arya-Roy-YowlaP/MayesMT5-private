@@ -313,15 +313,14 @@ class Game(object):
         self.t_in_secs = (
             self.bars30m.index[-1]-self.bars30m.index[0]).total_seconds()
         self.start_idx = self.curr_idx
-        self.curr_time = self.bars30m.index[0]
-        self.daily_profit = 0
-        self.daily_loss = 0
-        self.last_reset_date = self.curr_time.date()
+        self.curr_time = self.bars30m.index[int(self.curr_idx)]
         self._get_last_N_timebars()
         self.position = 0
         # Reset daily tracking variables if it's a new day
         if self.curr_time.date() != self.last_reset_date:
-            
+            self.daily_profit = 0
+            self.daily_loss = 0
+            self.last_reset_date = self.curr_time.date()
         self.act(0)
         self.state = []
         self._assemble_state()
