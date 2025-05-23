@@ -158,7 +158,6 @@ class Game(object):
         EXPECTED_STATE_LEN = 223
         self.state = np.array(self.state, dtype=np.float32)
         if len(self.state) < EXPECTED_STATE_LEN:
-            print(f"State length is less than expected. Padding with zeros to {EXPECTED_STATE_LEN}.")
             padding = np.zeros(EXPECTED_STATE_LEN - len(self.state))
             self.state = np.concatenate([self.state, padding])
         # print("State shape:", self.state.shape)
