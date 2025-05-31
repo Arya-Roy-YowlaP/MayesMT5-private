@@ -103,8 +103,8 @@ class Game(object):
                 # Save bars data to CSV
                 debug_data = {
                     'data_timestamp': [str(ts) for ts in bars['open'].keys()],
-                    'open': list(bars['open'].values,
-                    'high': list(bars['high'].values,
+                    'open': list(bars['open'].values),
+                    'high': list(bars['high'].values),
                     'low': list(bars['low'].values),
                     'close': list(bars['close'].values)
                 }
