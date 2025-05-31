@@ -210,7 +210,7 @@ class Game(object):
 
     def step(self, action):
         reward, _ = self.act(action)  # ignore is_over here
-        # self.is_over = False  # override act’s termination unless at dataset end
+        self.is_over = False  # override act’s termination unless at dataset end
 
         if self.curr_idx < len(self.bars30m) - 1:
             self.curr_idx += 1
@@ -232,8 +232,7 @@ class Game(object):
         self.entry = 0
         self._time_of_day = 0
         self._day_of_week = 0
-        # Keep current position instead of resetting to init_idx
-        self.curr_idx = self.curr_idx if hasattr(self, 'curr_idx') else (self.init_idx if self.init_idx is not None else 0)
+        self.curr_idx = self.init_idx if self.init_idx is not None else 0
         self.t_in_secs = (self.bars30m.index[-1] - self.bars30m.index[0]).total_seconds()
         self.start_idx = self.curr_idx
         self.curr_time = self.bars30m.index[int(self.curr_idx)]
@@ -248,6 +247,7 @@ class Game(object):
             self.last_reset_date = self.curr_time.date()
         self._assemble_state()
         obs = np.array(self.state, dtype=np.float32)
+        # assert obs.shape == self.observation_space.shape
         info = {}
         return obs, info
 
