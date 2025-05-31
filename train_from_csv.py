@@ -24,10 +24,10 @@ import talib
 import json
 
 class Game(object):
-    def __init__(self, bars30m, bars1d, bars4h, lkbk=20, init_idx=None):
+    def __init__(self, bars30m, bars4h, bars1d, lkbk=20, init_idx=None):
         self.bars30m = bars30m
-        self.bars1d = bars1d
         self.bars4h = bars4h
+        self.bars1d = bars1d
         self.lkbk = lkbk
         self.init_idx = init_idx if init_idx is not None else 0
         self.daily_profit = 0
