@@ -102,11 +102,11 @@ class Game(object):
                 
                 # Save bars data to CSV
                 debug_data = {
-                    'data_timestamp': json.dumps([str(ts) for ts in bars['open'].keys()]),
-                    'open': json.dumps(list(bars['open'].values)),
-                    'high': json.dumps(list(bars['high'].values)),
-                    'low': json.dumps(list(bars['low'].values)),
-                    'close': json.dumps(list(bars['close'].values))
+                    'data_timestamp': [str(ts) for ts in bars['open'].keys()],
+                    'open': list(bars['open'].values,
+                    'high': list(bars['high'].values,
+                    'low': list(bars['low'].values),
+                    'close': list(bars['close'].values)
                 }
                 debug_df = pd.DataFrame([debug_data])
                 debug_file = os.path.join(debug_dir, f"indicator_debug_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.csv")
