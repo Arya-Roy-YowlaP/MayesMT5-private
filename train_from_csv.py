@@ -238,13 +238,14 @@ class Game(object):
         return reward
     def step(self, action):
         reward, _ = self.act(action)  # ignore is_over here
-        # self.is_over = False  # override act’s termination unless at dataset end
 
         if self.curr_idx < len(self.bars30m) - 1:
             self.curr_idx += 1
         else:
-            self.is_over = True  # only terminate at end of data
-            # print("State shape:", self.state.shape)
+            self.is_over = True  # terminate at end of data
+            self.curr_idx = 0  # reset to beginning of data
+            self.position = 0  # close any open positions
+            self.entry = 0  # reset entry price
 
         self._assemble_state()
         obs = np.array(self.state, dtype=np.float32)
