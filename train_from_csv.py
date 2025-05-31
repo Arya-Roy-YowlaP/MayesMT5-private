@@ -159,26 +159,37 @@ class Game(object):
 
 
     def _get_last_N_timebars(self):
+        print(f"Getting last {self.lkbk} timebars at index {self.curr_idx}")
+        
         # Get 30m bars
         if int(self.curr_idx) >= self.lkbk-1:
+            print(f"30m: Using normal slice from {int(self.curr_idx)-self.lkbk+1} to {int(self.curr_idx)+1}")
             self.last30m = self.bars30m.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1]
         else:
+            print(f"30m: Using padding for first {self.lkbk - int(self.curr_idx) - 1} bars")
             padding = self.bars30m.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1)
             self.last30m = pd.concat([padding, self.bars30m.iloc[:int(self.curr_idx)+1]])
+        print(f"30m bars shape: {self.last30m.shape}")
             
         # Get 4h bars
         if int(self.curr_idx) >= self.lkbk-1:
+            print(f"4h: Using normal slice from {int(self.curr_idx)-self.lkbk+1} to {int(self.curr_idx)+1}")
             self.last4h = self.bars4h.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1]
         else:
+            print(f"4h: Using padding for first {self.lkbk - int(self.curr_idx) - 1} bars")
             padding = self.bars4h.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1)
             self.last4h = pd.concat([padding, self.bars4h.iloc[:int(self.curr_idx)+1]])
+        print(f"4h bars shape: {self.last4h.shape}")
             
         # Get 1d bars
         if int(self.curr_idx) >= self.lkbk-1:
+            print(f"1d: Using normal slice from {int(self.curr_idx)-self.lkbk+1} to {int(self.curr_idx)+1}")
             self.last1d = self.bars1d.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1]
         else:
+            print(f"1d: Using padding for first {self.lkbk - int(self.curr_idx) - 1} bars")
             padding = self.bars1d.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1)
             self.last1d = pd.concat([padding, self.bars1d.iloc[:int(self.curr_idx)+1]])
+        print(f"1d bars shape: {self.last1d.shape}")
 
     def get_state(self):
         self._assemble_state()
