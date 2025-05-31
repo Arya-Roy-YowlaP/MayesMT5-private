@@ -77,7 +77,12 @@ class Game(object):
     def _assemble_state(self):
         self.state = np.array([])
         self._get_last_N_timebars()
-        def _get_normalised_bars_array(bars): return (bars.iloc[-10:, :-1].values.flatten() - np.mean(bars.iloc[-10:, :-1].values.flatten())) / np.std(bars.iloc[-10:, :-1].values.flatten())
+        def _get_normalised_bars_array(bars): 
+            data = bars.iloc[-10:, :-1].values.flatten()
+            mean = np.mean(data)
+            std = np.std(data)
+            epsilon = 1e-8  # Small constant to prevent divide by zero
+            return (data - mean) / (std + epsilon)
         self.state = np.append(self.state, _get_normalised_bars_array(self.last30m))
         self.state = np.append(self.state, _get_normalised_bars_array(self.last4h))
         self.state = np.append(self.state, _get_normalised_bars_array(self.last1d))
