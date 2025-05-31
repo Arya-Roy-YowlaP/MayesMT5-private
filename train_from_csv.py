@@ -103,7 +103,7 @@ class Game(object):
                 # Save bars data to CSV
                 debug_data = {
                     'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'data_timestamp': json.dumps(list(bars['open'].keys())),
+                    'data_timestamp': json.dumps([str(ts) for ts in bars['open'].keys()]),
                     'open': json.dumps(list(bars['open'].values)),
                     'high': json.dumps(list(bars['high'].values)),
                     'low': json.dumps(list(bars['low'].values)),
