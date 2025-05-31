@@ -102,16 +102,15 @@ class Game(object):
                 # Save bars data to CSV
                 debug_data = {
                     'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'bars_data': bars.to_json()  # Save complete bars data as JSON string
+                    'data_timestamp': json.dumps(list(bars['open'].keys())),
+                    'open': json.dumps(list(bars['open'].values)),
+                    'high': json.dumps(list(bars['high'].values)),
+                    'low': json.dumps(list(bars['low'].values)),
+                    'close': json.dumps(list(bars['close'].values))
                 }
                 debug_df = pd.DataFrame([debug_data])
-                debug_file = os.path.join(debug_dir, f"indicator_debug_{datetime.now().strftime('%Y%m%d')}.csv")
-                
-                # Append to existing file or create new one
-                if os.path.exists(debug_file):
-                    debug_df.to_csv(debug_file, mode='a', header=False, index=False)
-                else:
-                    debug_df.to_csv(debug_file, index=False)
+                debug_file = os.path.join(debug_dir, f"indicator_debug_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.csv")
+                debug_df.to_csv(debug_file, index=False)
                 
                 print(f"Insufficient or invalid data for indicators - Length: {len(bars)}, Null values: {bars[['close', 'high', 'low']].isnull().sum().to_dict()}, Required length: 99")
                 print(f"Debug info saved to: {debug_file}")
