@@ -28,6 +28,7 @@ class Game(object):
         self.bars1d = bars1d
         self.bars4h = bars4h
         self.lkbk = lkbk
+        self.reward_function = reward_function
         self.init_idx = init_idx if init_idx is not None else 0
         self.daily_profit = 0
         self.daily_loss = 0
@@ -155,6 +156,9 @@ class Game(object):
         self.last30m = self.bars30m.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars30m.iloc[:int(self.curr_idx)+1]
         self.last4h = self.bars4h.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars4h.iloc[:int(self.curr_idx)+1]
         self.last1d = self.bars1d.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars1d.iloc[:int(self.curr_idx)+1]
+
+    def _get_reward(self):
+        if self.is_over: self.reward = self.reward_function(self.entry, self.curr_price, self.position)
 
     def get_state(self):
         self._assemble_state()
@@ -571,6 +575,7 @@ def main():
             bars30m=df30m,
             bars4h=df4h, 
             bars1d=df1d,
+            reward_function=reward_function,
             lkbk=100,
             init_idx= 101
         )

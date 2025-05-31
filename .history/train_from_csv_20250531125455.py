@@ -28,6 +28,7 @@ class Game(object):
         self.bars1d = bars1d
         self.bars4h = bars4h
         self.lkbk = lkbk
+        self.reward_function = reward_function
         self.init_idx = init_idx if init_idx is not None else 0
         self.daily_profit = 0
         self.daily_loss = 0
@@ -156,6 +157,9 @@ class Game(object):
         self.last4h = self.bars4h.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars4h.iloc[:int(self.curr_idx)+1]
         self.last1d = self.bars1d.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars1d.iloc[:int(self.curr_idx)+1]
 
+    def _get_reward(self):
+        if self.is_over: self.reward = self.reward_function(self.entry, self.curr_price, self.position)
+
     def get_state(self):
         self._assemble_state()
         return np.array(self.state, dtype=np.float32)
@@ -167,7 +171,7 @@ class Game(object):
         self.pnl = (-self.entry + self.curr_price) * self.position / self.entry if self.entry != 0 else 0
         if self.is_over: self.trade_len = self.curr_idx - self.start_idx
         return self.reward, self.is_over
-    def reward_function(self, entry_price, exit_price, position, daily_profit, daily_loss, daily_profit_target=100, daily_max_loss=-50):
+    def reward_function(entry_price, exit_price, position, daily_profit, daily_loss, daily_profit_target=100, daily_max_loss=-50):
         # Trade PnL: positive if profitable, negative if not
         pnl = (exit_price - entry_price) * position  # position = 1 for long, -1 for short
         reward = 0
@@ -571,6 +575,7 @@ def main():
             bars30m=df30m,
             bars4h=df4h, 
             bars1d=df1d,
+            reward_function=reward_function,
             lkbk=100,
             init_idx= 101
         )

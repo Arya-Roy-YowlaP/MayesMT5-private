@@ -156,6 +156,9 @@ class Game(object):
         self.last4h = self.bars4h.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars4h.iloc[:int(self.curr_idx)+1]
         self.last1d = self.bars1d.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars1d.iloc[:int(self.curr_idx)+1]
 
+    def _get_reward(self):
+        if self.is_over: self.reward = self.reward_function(self.entry, self.curr_price, self.position)
+
     def get_state(self):
         self._assemble_state()
         return np.array(self.state, dtype=np.float32)
@@ -571,6 +574,7 @@ def main():
             bars30m=df30m,
             bars4h=df4h, 
             bars1d=df1d,
+            reward_function=reward_function,
             lkbk=100,
             init_idx= 101
         )

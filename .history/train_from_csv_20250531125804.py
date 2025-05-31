@@ -571,6 +571,7 @@ def main():
             bars30m=df30m,
             bars4h=df4h, 
             bars1d=df1d,
+            reward_function=reward_function,
             lkbk=100,
             init_idx= 101
         )
