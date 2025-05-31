@@ -21,6 +21,7 @@ from visualization import plot_training_progress
 from ta.trend import sma_indicator, cci
 import numpy as np
 import talib
+import json
 
 class Game(object):
     def __init__(self, bars30m, bars1d, bars4h, lkbk=20, init_idx=None):
