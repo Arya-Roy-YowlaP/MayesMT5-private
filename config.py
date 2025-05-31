@@ -11,14 +11,14 @@ TRADING_PARAMS = {
 # RL Model Parameters
 MODEL_PARAMS = {
     'learning_rate': 3e-4,
-    'n_steps': 2048,  # Increased for better GPU utilization
+    'n_steps': 256,  # Increased for better GPU utilization
     'batch_size': 256,  # Increased for better GPU utilization
     'n_epochs': 10,
     'gamma': 0.99,  # Discount factor for future rewards
     'gae_lambda': 0.95,
     'clip_range': 0.2,
     'ent_coef': 0.01,
-    'total_timesteps': 50000,
+    'total_timesteps': 140200,
     'device': 'cpu',  # Force GPU usage
     'n_envs': 8,  # Number of parallel environments
     'policy_kwargs': {
