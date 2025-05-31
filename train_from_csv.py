@@ -97,23 +97,8 @@ class Game(object):
 
             # Must have at least 99 rows for longest indicator to work
             if len(bars) < 99 or bars[['close', 'high', 'low']].isnull().any().any():
-                debug_dir = "debug/technical_indicators"
-                os.makedirs(debug_dir, exist_ok=True)
-                
-                # Save bars data to CSV
-                debug_data = {
-                    'data_timestamp': bars['open'].keys(),
-                    'open': bars['open'].values,
-                    'high': bars['high'].values,
-                    'low': bars['low'].values,
-                    'close': bars['close'].values
-                }
-                debug_df = pd.DataFrame([debug_data])
-                debug_file = os.path.join(debug_dir, f"indicator_debug_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.csv")
-                debug_df.to_csv(debug_file, index=False)
                 
                 print(f"Insufficient or invalid data for indicators - Length: {len(bars)}, Null values: {bars[['close', 'high', 'low']].isnull().sum().to_dict()}, Required length: 99")
-                print(f"Debug info saved to: {debug_file}")
                 return np.full(16, 0.0)
 
             try:
@@ -174,9 +159,9 @@ class Game(object):
 
 
     def _get_last_N_timebars(self):
-        self.last30m = self.bars30m.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars30m.iloc[:int(self.curr_idx)+1]
-        self.last4h = self.bars4h.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars4h.iloc[:int(self.curr_idx)+1]
-        self.last1d = self.bars1d.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else self.bars1d.iloc[:int(self.curr_idx)+1]
+        self.last30m = self.bars30m.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else pd.concat([self.bars30m.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1), self.bars30m.iloc[:int(self.curr_idx)+1]])
+        self.last4h = self.bars4h.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else pd.concat([self.bars4h.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1), self.bars4h.iloc[:int(self.curr_idx)+1]])
+        self.last1d = self.bars1d.iloc[int(self.curr_idx)-self.lkbk+1:int(self.curr_idx)+1] if int(self.curr_idx) >= self.lkbk-1 else pd.concat([self.bars1d.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1), self.bars1d.iloc[:int(self.curr_idx)+1]])
 
     def get_state(self):
         self._assemble_state()
