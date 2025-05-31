@@ -243,7 +243,7 @@ class Game(object):
             self.curr_idx += 1
         else:
             self.is_over = True  # terminate at end of data
-            self.curr_idx = 0  # reset to beginning of data
+            self.curr_idx = 100  # reset to beginning of data
             self.position = 0  # close any open positions
             self.entry = 0  # reset entry price
 
