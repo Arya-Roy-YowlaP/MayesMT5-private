@@ -239,7 +239,7 @@ class Game(object):
     def step(self, action):
         reward, _ = self.act(action)  # ignore is_over here
 
-        if self.curr_idx < len(self.bars30m) - 1:
+        if self.curr_idx < len(self.bars1d) - 1:
             self.curr_idx += 1
         else:
             self.is_over = True  # terminate at end of data
