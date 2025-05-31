@@ -96,7 +96,25 @@ class Game(object):
 
             # Must have at least 99 rows for longest indicator to work
             if len(bars) < 99 or bars[['close', 'high', 'low']].isnull().any().any():
-                print("Insufficient or invalid data for indicators")
+                debug_dir = "debug/technical_indicators"
+                os.makedirs(debug_dir, exist_ok=True)
+                
+                # Save bars data to CSV
+                debug_data = {
+                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'bars_data': bars.to_json()  # Save complete bars data as JSON string
+                }
+                debug_df = pd.DataFrame([debug_data])
+                debug_file = os.path.join(debug_dir, f"indicator_debug_{datetime.now().strftime('%Y%m%d')}.csv")
+                
+                # Append to existing file or create new one
+                if os.path.exists(debug_file):
+                    debug_df.to_csv(debug_file, mode='a', header=False, index=False)
+                else:
+                    debug_df.to_csv(debug_file, index=False)
+                
+                print(f"Insufficient or invalid data for indicators - Length: {len(bars)}, Null values: {bars[['close', 'high', 'low']].isnull().sum().to_dict()}, Required length: 99")
+                print(f"Debug info saved to: {debug_file}")
                 return np.full(16, 0.0)
 
             try:
