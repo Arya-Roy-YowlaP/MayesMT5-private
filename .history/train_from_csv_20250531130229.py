@@ -387,6 +387,7 @@ def train_ppo(env, logger, save_path="models"):
             bars30m,
             bars4h, 
             bars1d,
+            reward_function,
             lkbk,
             init_idx
         )
