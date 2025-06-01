@@ -135,12 +135,12 @@ class Game(object):
             return tech_ind
 
         def _get_normalised_indicators_array(indicators):
-            # Convert numpy array to pandas DataFrame if needed
-            if isinstance(indicators, np.ndarray):
-                indicators = pd.DataFrame(indicators)
+            # Convert to numpy array if not already
+            if not isinstance(indicators, np.ndarray):
+                indicators = np.array(indicators)
             
-            # Get all columns except the last one and flatten
-            data = indicators.iloc[:, :-1].values.flatten()
+            # Get all elements except the last one and flatten
+            data = indicators[:-1].flatten()
             mean = np.mean(data)
             std = np.std(data)
             epsilon = 1e-8  # Small constant to prevent divide by zero
