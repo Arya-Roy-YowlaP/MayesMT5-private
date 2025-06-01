@@ -134,9 +134,16 @@ class Game(object):
 
             return tech_ind
 
-        indicators_30m = _get_technical_indicators(self.last30m)
-        indicators_4h = _get_technical_indicators(self.last4h)
-        indicators_1d = _get_technical_indicators(self.last1d)
+        def _get_normalised_indicators_array(indicators):
+            data = indicators.iloc[:, :-1].values.flatten()
+            mean = np.mean(data)
+            std = np.std(data)
+            epsilon = 1e-8  # Small constant to prevent divide by zero
+            return (data - mean) / (std + epsilon)
+        
+        indicators_30m = _get_normalised_indicators_array(_get_technical_indicators(self.last30m))
+        indicators_4h = _get_normalised_indicators_array(_get_technical_indicators(self.last4h))
+        indicators_1d = _get_normalised_indicators_array(_get_technical_indicators(self.last1d))
         self.state = np.append(self.state, indicators_30m)
         self.state = np.append(self.state, indicators_4h)
         self.state = np.append(self.state, indicators_1d)
