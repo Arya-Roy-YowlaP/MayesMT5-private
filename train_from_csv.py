@@ -175,7 +175,7 @@ class Game(object):
             
         # Get 1d bars
         if int(self.curr_idx) >= self.lkbk-1:
-            self.last1d = self.bars1d.iloc[100 + int((self.curr_idx - 100) // 48)-self.lkbk+1:100 + int((self.curr_idx - 100) // 48)+1]
+            self.last1d = self.bars1d.iloc[106 + int((self.curr_idx - 100) // 48)-self.lkbk+1:106 + int((self.curr_idx - 100) // 48)+1]
         else:
             padding = self.bars1d.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1)
             self.last1d = pd.concat([padding, self.bars1d.iloc[:int(self.curr_idx)+1]])
