@@ -43,6 +43,8 @@ class Game(object):
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-1e6, high=1e6, shape=(223,), dtype=np.float32)
         self.step_count = 0
+        self.prev_price = self.bars30m['close'].iloc[int(self.curr_idx)]
+
         
 
     def _update_position(self, action):
@@ -91,6 +93,11 @@ class Game(object):
                 self.entry = 0
                 self.start_idx = self.curr_idx
                 self.step_count = 0  # flat, so reset
+        # --- Immediate episode termination if loss/drawdown breached ---
+        peak_loss = getattr(self, "peak_loss", 0)
+        drawdown_percentage = ((peak_loss - self.daily_loss) / abs(peak_loss)) * 100 if peak_loss < 0 else 0
+        if self.daily_loss <= self.daily_max_loss or drawdown_percentage <= -5:
+            self.is_over = True  # End episode immediately
 
 
     def _close_position(self):
@@ -235,8 +242,7 @@ class Game(object):
         self.curr_time = self.bars30m.index[int(self.curr_idx)]
         self.curr_price = self.bars30m['close'].iloc[int(self.curr_idx)]
 
-        # Save previous price for intermediate reward
-        self.prev_price = self.curr_price
+        
 
         self._update_position(action)
 
@@ -254,6 +260,8 @@ class Game(object):
             step_count=self.step_count
         )
 
+
+        self.prev_price = self.curr_price   
         self.pnl = (-self.entry + self.curr_price) * self.position / self.entry if self.entry != 0 else 0
 
         if self.is_over:
@@ -304,22 +312,30 @@ class Game(object):
             reward += int(profit_percentage - 10)
             print(f"Profit target bonus applied: {10 + int(profit_percentage - 10)}")
 
-        if drawdown_percentage <= -5:
-            reward -= 10
-            reward -= int(abs(drawdown_percentage) - 5)
-            self.is_over = True
-            print(f"Drawdown penalty applied: {-10 - int(abs(drawdown_percentage) - 5)}")
+        if self.curr_idx + 1 < len(self.bars30m):
+            is_end_of_day = self.curr_time.date() != self.bars30m.index[self.curr_idx + 1].date()
+        else:
+            is_end_of_day = True  # Last bar, so must be end of day
 
-        if daily_profit < daily_profit_target:
-            if profit_shortfall > 0.5:
-                reward -= 5
-                print("Profit shortfall penalty applied: -5")
-            elif profit_shortfall > 0.3:
-                reward -= 3
-                print("Profit shortfall penalty applied: -3")
-            else:
-                reward -= 2
-                print("Profit shortfall penalty applied: -2")
+
+        if is_end_of_day :
+
+            # Drawdown penalty only at end of day
+            if drawdown_percentage <= -5:
+                reward -= 10
+                reward -= int(abs(drawdown_percentage) - 5)
+                print(f"Drawdown penalty applied: {-10 - int(abs(drawdown_percentage) - 5)}")
+
+            if daily_profit < daily_profit_target:
+                if profit_shortfall > 0.5:
+                    reward -= 5
+                    print("Profit shortfall penalty applied: -5")
+                elif profit_shortfall > 0.3:
+                    reward -= 3
+                    print("Profit shortfall penalty applied: -3")
+                else:
+                    reward -= 2
+                    print("Profit shortfall penalty applied: -2")
 
         if daily_loss <= daily_max_loss:
             reward -= 10
