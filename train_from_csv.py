@@ -22,6 +22,7 @@ from ta.trend import sma_indicator, cci
 import numpy as np
 import talib
 import json
+from collections import Counter
 
 class Game(object):
     def __init__(self, bars30m, bars4h, bars1d, lkbk=20, init_idx=None):
