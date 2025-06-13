@@ -832,4 +832,4 @@ def main_debug():
     )
     debug_ppo_agent(env.envs[0], model, n_episodes=3, max_steps_per_episode=100)
 if __name__ == "__main__":
-    main_debug() 
+    main() 
