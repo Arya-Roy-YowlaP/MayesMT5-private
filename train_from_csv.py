@@ -327,6 +327,7 @@ class Game(object):
                 reward -= int(abs(drawdown_percentage) - 5)
                 # print(f"Drawdown penalty applied: {-10 - int(abs(drawdown_percentage) - 5)}")
             else:
+                pass
                 # print("No drawdown penalty: drawdown threshold not breached.")
 
             if daily_profit >= daily_profit_target:
