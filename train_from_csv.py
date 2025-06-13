@@ -666,7 +666,9 @@ def debug_ppo_agent(env, model, n_episodes=5, max_steps_per_episode=200):
         while not done and steps < max_steps_per_episode:
             # Get action from the model
             action, _ = model.predict(obs, deterministic=False)
-            episode_actions.append(action if np.isscalar(action) else action[0])
+            action_val = action.item() if hasattr(action, "item") else action
+            episode_actions.append(action_val)
+
 
             # Step the environment
             obs, reward, done, truncated, info = env.step(action)
