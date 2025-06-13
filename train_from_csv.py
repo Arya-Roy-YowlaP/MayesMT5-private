@@ -240,7 +240,7 @@ class Game(object):
 
         return self.reward, self.is_over
 
-        def reward_function(self, entry_price, current_price, position, 
+    def reward_function(self, entry_price, current_price, position, 
                         daily_profit, daily_loss, 
                         daily_profit_target=100, daily_max_loss=-50, 
                         step_count=0, max_steps_per_trade=50):
