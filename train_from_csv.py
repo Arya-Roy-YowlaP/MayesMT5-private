@@ -40,11 +40,18 @@ class Game(object):
         self.reset()
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-1e6, high=1e6, shape=(223,), dtype=np.float32)
+        self.step_count = 0
         
 
     def _update_position(self, action):
+        # Always increment step_count if a position is open
+        if self.position != 0:
+            self.step_count += 1
+        else:
+            self.step_count = 0
+
         if action == 0:
-            pass  # hold
+            pass  # hold (step_count is already incremented above)
         elif action == 1:  # go short
             if self.position == -1:
                 pass  # already short
@@ -52,12 +59,14 @@ class Game(object):
                 self.position = -1
                 self.entry = self.curr_price
                 self.start_idx = self.curr_idx
+                self.step_count = 1  # new position opened, reset to 1
             elif self.position == 1:
                 # close long, realize PnL, go short
                 self._close_position()
                 self.position = -1
                 self.entry = self.curr_price
                 self.start_idx = self.curr_idx
+                self.step_count = 1  # new position opened, reset to 1
         elif action == 2:  # go long
             if self.position == 1:
                 pass  # already long
@@ -65,25 +74,29 @@ class Game(object):
                 self.position = 1
                 self.entry = self.curr_price
                 self.start_idx = self.curr_idx
+                self.step_count = 1  # new position opened, reset to 1
             elif self.position == -1:
                 # close short, realize PnL, go long
                 self._close_position()
                 self.position = 1
                 self.entry = self.curr_price
                 self.start_idx = self.curr_idx
+                self.step_count = 1  # new position opened, reset to 1
         elif action == 3:  # exit/flat
             if self.position != 0:
                 self._close_position()
                 self.position = 0
                 self.entry = 0
                 self.start_idx = self.curr_idx
+                self.step_count = 0  # flat, so reset
+
 
     def close_position(self):
         trade_pnl = (self.curr_price - self.entry) * self.position
         self.daily_profit += trade_pnl if trade_pnl > 0 else 0
         self.daily_loss += trade_pnl if trade_pnl <= 0 else 0
         self.peak_loss = min(self.peak_loss, self.daily_loss) if hasattr(self, 'peak_loss') else self.daily_loss
-        self.reward += self.reward_function(self.entry, self.curr_price, self.position, self.daily_profit, self.daily_loss, self.daily_profit_target, self.daily_max_loss)
+        self.reward += self.reward_function(self.entry, self.curr_price, self.position, self.daily_profit, self.daily_loss, self.daily_profit_target, self.daily_max_loss, step_count=self.step_count)
 
     def _check_ribbon_formation(self, sma_values):
         is_bullish = all(sma_values[i] <= sma_values[i+1] for i in range(len(sma_values)-1))
@@ -225,12 +238,18 @@ class Game(object):
 
         self._update_position(action)
 
+        self.step_count = self.curr_idx - self.start_idx if self.position != 0 else 0
+
         # Intermediate reward regardless of position closing
         self.reward = self.reward_function(
             self.entry,
             self.curr_price,
             self.position,
-            step_count=self.curr_idx - self.start_idx if self.position != 0 else 0
+            self.daily_profit,
+            self.daily_loss,
+            self.daily_profit_target,
+            self.daily_max_loss,
+            step_count=self.step_count
         )
 
         self.pnl = (-self.entry + self.curr_price) * self.position / self.entry if self.entry != 0 else 0
@@ -329,6 +348,7 @@ class Game(object):
         self.is_over = False
         self.reward = 0
         self.state = []
+        self.step_count = 0
         if self.curr_time.date() != self.last_reset_date:
             self.daily_profit = 0
             self.daily_loss = 0
