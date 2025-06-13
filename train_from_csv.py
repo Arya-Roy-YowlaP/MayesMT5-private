@@ -746,6 +746,8 @@ def main_debug():
         wrapped = GameGymWrapper(env)
         env = Monitor(wrapped)
         return env
+    tensorboard_log = os.path.join("models", "tensorboard")
+    os.makedirs(tensorboard_log, exist_ok=True)
     env = DummyVecEnv([make_env for _ in range(MODEL_PARAMS['n_envs'])])
     model = PPO(
         "MlpPolicy",
