@@ -38,32 +38,52 @@ class Game(object):
         self.curr_idx = self.init_idx
         self.position = 0
         self.reset()
-        self.action_space = spaces.Discrete(3)
+        self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-1e6, high=1e6, shape=(223,), dtype=np.float32)
         
 
     def _update_position(self, action):
-        if action == 0: pass
-        elif action == 2:
-            if self.position == 1: pass
-            elif self.position == 0: self.position = 1; self.entry = self.curr_price; self.start_idx = self.curr_idx
-            elif self.position == -1:
-                self.is_over = True
-                trade_pnl = (self.curr_price - self.entry) * self.position
-                self.daily_profit += trade_pnl if trade_pnl > 0 else 0
-                self.daily_loss += trade_pnl if trade_pnl <= 0 else 0
-                self.peak_loss = min(self.peak_loss, self.daily_loss) if hasattr(self, 'peak_loss') else self.daily_loss
-                self.reward += self.reward_function(self.entry, self.curr_price, self.position, self.daily_profit, self.daily_loss, self.daily_profit_target, self.daily_max_loss)
-        elif action == 1:
-            if self.position == -1: pass
-            elif self.position == 0: self.position = -1; self.entry = self.curr_price; self.start_idx = self.curr_idx
+        if action == 0:
+            pass  # hold
+        elif action == 1:  # go short
+            if self.position == -1:
+                pass  # already short
+            elif self.position == 0:
+                self.position = -1
+                self.entry = self.curr_price
+                self.start_idx = self.curr_idx
             elif self.position == 1:
-                self.is_over = True
-                trade_pnl = (self.curr_price - self.entry) * self.position
-                self.daily_profit += trade_pnl if trade_pnl > 0 else 0
-                self.daily_loss += trade_pnl if trade_pnl <= 0 else 0
-                self.peak_loss = min(self.peak_loss, self.daily_loss) if hasattr(self, 'peak_loss') else self.daily_loss
-                self.reward += self.reward_function(self.entry, self.curr_price, self.position, self.daily_profit, self.daily_loss, self.daily_profit_target, self.daily_max_loss)
+                # close long, realize PnL, go short
+                self._close_position()
+                self.position = -1
+                self.entry = self.curr_price
+                self.start_idx = self.curr_idx
+        elif action == 2:  # go long
+            if self.position == 1:
+                pass  # already long
+            elif self.position == 0:
+                self.position = 1
+                self.entry = self.curr_price
+                self.start_idx = self.curr_idx
+            elif self.position == -1:
+                # close short, realize PnL, go long
+                self._close_position()
+                self.position = 1
+                self.entry = self.curr_price
+                self.start_idx = self.curr_idx
+        elif action == 3:  # exit/flat
+            if self.position != 0:
+                self._close_position()
+                self.position = 0
+                self.entry = 0
+                self.start_idx = self.curr_idx
+
+    def close_position(self):
+        trade_pnl = (self.curr_price - self.entry) * self.position
+        self.daily_profit += trade_pnl if trade_pnl > 0 else 0
+        self.daily_loss += trade_pnl if trade_pnl <= 0 else 0
+        self.peak_loss = min(self.peak_loss, self.daily_loss) if hasattr(self, 'peak_loss') else self.daily_loss
+        self.reward += self.reward_function(self.entry, self.curr_price, self.position, self.daily_profit, self.daily_loss, self.daily_profit_target, self.daily_max_loss)
 
     def _check_ribbon_formation(self, sma_values):
         is_bullish = all(sma_values[i] <= sma_values[i+1] for i in range(len(sma_values)-1))
@@ -197,46 +217,82 @@ class Game(object):
         return np.array(self.state, dtype=np.float32)
 
     def act(self, action):
-        self.curr_time = self.bars30m.index[int(self.curr_idx)]
-        self.curr_price = self.bars30m['close'].iloc[int(self.curr_idx)]
-        self._update_position(action)
-        self.pnl = (-self.entry + self.curr_price) * self.position / self.entry if self.entry != 0 else 0
-        if self.is_over: self.trade_len = self.curr_idx - self.start_idx
-        return self.reward, self.is_over
-    def reward_function(self, entry_price, exit_price, position, daily_profit, daily_loss, daily_profit_target=100, daily_max_loss=-50):
-        # Trade PnL: positive if profitable, negative if not
-        pnl = (exit_price - entry_price) * position  # position = 1 for long, -1 for short
-        reward = 0
+    self.curr_time = self.bars30m.index[int(self.curr_idx)]
+    self.curr_price = self.bars30m['close'].iloc[int(self.curr_idx)]
 
+    # Save previous price for intermediate reward
+    self.prev_price = self.curr_price
 
-        # Daily profit bonus - +10 for 10% profit, +1 per 1% increment
-        profit_percentage = (daily_profit / daily_profit_target) * 100
-        if profit_percentage >= 10:
-            reward += 10  # Base bonus for hitting 10%
-            reward += int(profit_percentage - 10)  # Additional +1 per 1% above 10%
-    
-        drawdown_percentage = ((self.peak_loss - self.daily_loss) / abs(self.peak_loss)) * 100 if self.peak_loss < 0 else 0
-        
-        # Drawdown penalties
-        if drawdown_percentage <= -5:
-            reward -= 10  # Base penalty for exceeding 5% drawdown
-            reward -= int(abs(drawdown_percentage) - 5)  # Additional -1 per 1% above 5%
-            self.is_over = True  # Terminate trading for the day
-        
-        # Penalty for not meeting daily profit target
-        if daily_profit < daily_profit_target:
-            profit_shortfall = (daily_profit_target - daily_profit) / daily_profit_target
-            if profit_shortfall > 0.5:  # More than 50% shortfall
-                reward -= 5
-            elif profit_shortfall > 0.3:  # More than 30% shortfall
-                reward -= 3
-            else:  # Less than 30% shortfall
-                reward -= 2
-        # Daily loss penalty
-        if daily_loss <= daily_max_loss:
-            reward -= 10  # penalty for exceeding daily loss
+    self._update_position(action)
 
-        return reward
+    # Intermediate reward regardless of position closing
+    self.reward = self.reward_function(
+        self.entry,
+        self.curr_price,
+        self.position,
+        step_count=self.curr_idx - self.start_idx if self.position != 0 else 0
+    )
+
+    self.pnl = (-self.entry + self.curr_price) * self.position / self.entry if self.entry != 0 else 0
+
+    if self.is_over:
+        self.trade_len = self.curr_idx - self.start_idx
+
+    return self.reward, self.is_over
+
+    def reward_function(self, entry_price, current_price, position, 
+                    daily_profit, daily_loss, 
+                    daily_profit_target=100, daily_max_loss=-50, 
+                    step_count=0, max_steps_per_trade=50):
+    reward = 0
+
+    # --- 1. Stepwise reward for correct direction ---
+    if position != 0:
+        price_change = current_price - self.prev_price
+        # Give small reward for being in correct direction, penalty otherwise
+        directional_pnl = price_change * position
+        reward += 0.1 * np.sign(directional_pnl)
+
+    # --- 2. Realized PnL at position close ---
+    # Only applies if trade closed at this step
+    if self.is_over and entry_price != 0:
+        pnl = (current_price - entry_price) * position
+        reward += pnl
+
+    # --- 3. Time decay penalty for trades held too long ---
+    if position != 0 and step_count > max_steps_per_trade:
+        reward -= 0.5  # or scale by how much it overstays
+
+    # --- 4. Daily-level controls ---
+    # Profit bonus for hitting/exceeding daily target
+    profit_percentage = (daily_profit / daily_profit_target) * 100
+    if profit_percentage >= 10:
+        reward += 10  # Base bonus for hitting 10%
+        reward += int(profit_percentage - 10)  # Additional +1 per 1% above 10%
+
+    # Drawdown penalty (based on peak loss)
+    drawdown_percentage = ((self.peak_loss - daily_loss) / abs(self.peak_loss)) * 100 if self.peak_loss < 0 else 0
+    if drawdown_percentage <= -5:
+        reward -= 10
+        reward -= int(abs(drawdown_percentage) - 5)
+        self.is_over = True  # Terminate trading for the day
+
+    # Penalty for not meeting profit target
+    if daily_profit < daily_profit_target:
+        profit_shortfall = (daily_profit_target - daily_profit) / daily_profit_target
+        if profit_shortfall > 0.5:
+            reward -= 5
+        elif profit_shortfall > 0.3:
+            reward -= 3
+        else:
+            reward -= 2
+
+    # Daily loss penalty
+    if daily_loss <= daily_max_loss:
+        reward -= 10
+
+    return reward
+
     def step(self, action):
         reward, _ = self.act(action)  # ignore is_over here
 
@@ -264,6 +320,7 @@ class Game(object):
         self._day_of_week = 0
         # Keep current position instead of resetting to init_idx
         self.curr_idx = self.curr_idx if hasattr(self, 'curr_idx') else (self.init_idx if self.init_idx is not None else 0)
+        self.prev_price = self.bars30m['close'].iloc[int(self.curr_idx)]
         self.t_in_secs = (self.bars30m.index[-1] - self.bars30m.index[0]).total_seconds()
         self.start_idx = self.curr_idx
         self.curr_time = self.bars30m.index[int(self.curr_idx)]
@@ -589,6 +646,47 @@ def plot_training_curves(rewards, losses, save_path="training_curves"):
     plt.savefig(os.path.join(save_path, f'losses_{timestamp}.png'))
     plt.close()
 
+def debug_ppo_agent(env, model, n_episodes=5, max_steps_per_episode=200):
+    """
+    Runs the PPO agent for a few episodes and prints debug info:
+    - Action distribution
+    - Reward distribution
+    - PPO loss (if accessible)
+    """
+    all_actions = []
+    all_rewards = []
+
+    for ep in range(n_episodes):
+        obs, _ = env.reset()
+        episode_rewards = []
+        episode_actions = []
+        done = False
+        steps = 0
+
+        while not done and steps < max_steps_per_episode:
+            # Get action from the model
+            action, _ = model.predict(obs, deterministic=False)
+            episode_actions.append(action if np.isscalar(action) else action[0])
+
+            # Step the environment
+            obs, reward, done, truncated, info = env.step(action)
+            episode_rewards.append(reward)
+            steps += 1
+
+        all_actions += episode_actions
+        all_rewards += episode_rewards
+
+        print(f"Episode {ep+1} finished after {steps} steps")
+        print(f"  Actions taken: {Counter(episode_actions)}")
+        print(f"  Reward stats: min={np.min(episode_rewards):.2f} max={np.max(episode_rewards):.2f} mean={np.mean(episode_rewards):.2f}")
+
+    # Summary across all episodes
+    print("\nSummary over all episodes:")
+    print(f"  Action counts: {Counter(all_actions)}")
+    print(f"  Unique actions: {set(all_actions)} (should cover all 4: 0=hold, 1=sell, 2=buy, 3=exit)")
+    print(f"  Total reward stats: min={np.min(all_rewards):.2f} max={np.max(all_rewards):.2f} mean={np.mean(all_rewards):.2f}")
+
+
 def main():
         logger = setup_logging('train_from_csv')
         create_directories()
@@ -621,5 +719,24 @@ def main():
     # except Exception as e:
     #     logger.error(f"Error during training: {str(e)}")
 
+def main_debug():
+    env = DummyVecEnv([make_env for _ in range(MODEL_PARAMS['n_envs'])])
+    model = PPO(
+        "MlpPolicy",
+        env,
+        verbose=1,
+        learning_rate=MODEL_PARAMS['learning_rate'],
+        n_steps=MODEL_PARAMS['n_steps'],
+        batch_size=MODEL_PARAMS['batch_size'],
+        n_epochs=MODEL_PARAMS['n_epochs'],
+        gamma=MODEL_PARAMS['gamma'],
+        gae_lambda=MODEL_PARAMS['gae_lambda'],
+        clip_range=MODEL_PARAMS['clip_range'],
+        ent_coef=MODEL_PARAMS['ent_coef'],
+        tensorboard_log=tensorboard_log,
+        device=MODEL_PARAMS['device'],
+        policy_kwargs=MODEL_PARAMS['policy_kwargs']
+    )
+    debug_ppo_agent(env.envs[0], model, n_episodes=3, max_steps_per_episode=100)
 if __name__ == "__main__":
-    main() 
+    main_debug() 
