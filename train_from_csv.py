@@ -34,6 +34,7 @@ class Game(object):
         self.daily_loss = 0
         self.daily_profit_target = 100
         self.daily_max_loss = -50
+        self.peak_loss = 0
         self.last_reset_date = None
         self.curr_idx = self.init_idx
         self.position = 0
@@ -288,7 +289,7 @@ class Game(object):
         if profit_percentage >= 10:
             reward += 10  # Base bonus for hitting 10%
             reward += int(profit_percentage - 10)  # Additional +1 per 1% above 10%
-
+        peak_loss = getattr(self, "peak_loss", 0)
         # Drawdown penalty (based on peak loss)
         drawdown_percentage = ((self.peak_loss - daily_loss) / abs(self.peak_loss)) * 100 if self.peak_loss < 0 else 0
         if drawdown_percentage <= -5:
