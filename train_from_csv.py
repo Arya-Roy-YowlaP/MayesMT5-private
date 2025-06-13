@@ -217,81 +217,81 @@ class Game(object):
         return np.array(self.state, dtype=np.float32)
 
     def act(self, action):
-    self.curr_time = self.bars30m.index[int(self.curr_idx)]
-    self.curr_price = self.bars30m['close'].iloc[int(self.curr_idx)]
+        self.curr_time = self.bars30m.index[int(self.curr_idx)]
+        self.curr_price = self.bars30m['close'].iloc[int(self.curr_idx)]
 
-    # Save previous price for intermediate reward
-    self.prev_price = self.curr_price
+        # Save previous price for intermediate reward
+        self.prev_price = self.curr_price
 
-    self._update_position(action)
+        self._update_position(action)
 
-    # Intermediate reward regardless of position closing
-    self.reward = self.reward_function(
-        self.entry,
-        self.curr_price,
-        self.position,
-        step_count=self.curr_idx - self.start_idx if self.position != 0 else 0
-    )
+        # Intermediate reward regardless of position closing
+        self.reward = self.reward_function(
+            self.entry,
+            self.curr_price,
+            self.position,
+            step_count=self.curr_idx - self.start_idx if self.position != 0 else 0
+        )
 
-    self.pnl = (-self.entry + self.curr_price) * self.position / self.entry if self.entry != 0 else 0
+        self.pnl = (-self.entry + self.curr_price) * self.position / self.entry if self.entry != 0 else 0
 
-    if self.is_over:
-        self.trade_len = self.curr_idx - self.start_idx
+        if self.is_over:
+            self.trade_len = self.curr_idx - self.start_idx
 
-    return self.reward, self.is_over
+        return self.reward, self.is_over
 
-    def reward_function(self, entry_price, current_price, position, 
-                    daily_profit, daily_loss, 
-                    daily_profit_target=100, daily_max_loss=-50, 
-                    step_count=0, max_steps_per_trade=50):
-    reward = 0
+        def reward_function(self, entry_price, current_price, position, 
+                        daily_profit, daily_loss, 
+                        daily_profit_target=100, daily_max_loss=-50, 
+                        step_count=0, max_steps_per_trade=50):
+        reward = 0
 
-    # --- 1. Stepwise reward for correct direction ---
-    if position != 0:
-        price_change = current_price - self.prev_price
-        # Give small reward for being in correct direction, penalty otherwise
-        directional_pnl = price_change * position
-        reward += 0.1 * np.sign(directional_pnl)
+        # --- 1. Stepwise reward for correct direction ---
+        if position != 0:
+            price_change = current_price - self.prev_price
+            # Give small reward for being in correct direction, penalty otherwise
+            directional_pnl = price_change * position
+            reward += 0.1 * np.sign(directional_pnl)
 
-    # --- 2. Realized PnL at position close ---
-    # Only applies if trade closed at this step
-    if self.is_over and entry_price != 0:
-        pnl = (current_price - entry_price) * position
-        reward += pnl
+        # --- 2. Realized PnL at position close ---
+        # Only applies if trade closed at this step
+        if self.is_over and entry_price != 0:
+            pnl = (current_price - entry_price) * position
+            reward += pnl
 
-    # --- 3. Time decay penalty for trades held too long ---
-    if position != 0 and step_count > max_steps_per_trade:
-        reward -= 0.5  # or scale by how much it overstays
+        # --- 3. Time decay penalty for trades held too long ---
+        if position != 0 and step_count > max_steps_per_trade:
+            reward -= 0.5  # or scale by how much it overstays
 
-    # --- 4. Daily-level controls ---
-    # Profit bonus for hitting/exceeding daily target
-    profit_percentage = (daily_profit / daily_profit_target) * 100
-    if profit_percentage >= 10:
-        reward += 10  # Base bonus for hitting 10%
-        reward += int(profit_percentage - 10)  # Additional +1 per 1% above 10%
+        # --- 4. Daily-level controls ---
+        # Profit bonus for hitting/exceeding daily target
+        profit_percentage = (daily_profit / daily_profit_target) * 100
+        if profit_percentage >= 10:
+            reward += 10  # Base bonus for hitting 10%
+            reward += int(profit_percentage - 10)  # Additional +1 per 1% above 10%
 
-    # Drawdown penalty (based on peak loss)
-    drawdown_percentage = ((self.peak_loss - daily_loss) / abs(self.peak_loss)) * 100 if self.peak_loss < 0 else 0
-    if drawdown_percentage <= -5:
-        reward -= 10
-        reward -= int(abs(drawdown_percentage) - 5)
-        self.is_over = True  # Terminate trading for the day
+        # Drawdown penalty (based on peak loss)
+        drawdown_percentage = ((self.peak_loss - daily_loss) / abs(self.peak_loss)) * 100 if self.peak_loss < 0 else 0
+        if drawdown_percentage <= -5:
+            reward -= 10
+            reward -= int(abs(drawdown_percentage) - 5)
+            self.is_over = True  # Terminate trading for the day
 
-    # Penalty for not meeting profit target
-    if daily_profit < daily_profit_target:
-        profit_shortfall = (daily_profit_target - daily_profit) / daily_profit_target
-        if profit_shortfall > 0.5:
-            reward -= 5
-        elif profit_shortfall > 0.3:
-            reward -= 3
-        else:
-            reward -= 2
+        # Penalty for not meeting profit target
+        if daily_profit < daily_profit_target:
+            profit_shortfall = (daily_profit_target - daily_profit) / daily_profit_target
+            if profit_shortfall > 0.5:
+                reward -= 5
+            elif profit_shortfall > 0.3:
+                reward -= 3
+            else:
+                reward -= 2
 
-    # Daily loss penalty
-    if daily_loss <= daily_max_loss:
-        reward -= 10
+        # Daily loss penalty
+        if daily_loss <= daily_max_loss:
+            reward -= 10
 
-    return reward
+        return reward
 
     def step(self, action):
         reward, _ = self.act(action)  # ignore is_over here
