@@ -33,7 +33,7 @@ class Game(object):
         self.init_idx = init_idx if init_idx is not None else 0
         self.daily_profit = 0
         self.daily_loss = 0
-        self.daily_profit_target = 100
+        self.daily_profit_target = 0.015
         self.daily_max_loss = -50
         self.peak_loss = 0
         self.last_reset_date = None
@@ -317,16 +317,25 @@ class Game(object):
         else:
             is_end_of_day = True  # Last bar, so must be end of day
 
+        drawdown_threshold = -0.03
 
         if is_end_of_day :
 
             # Drawdown penalty only at end of day
-            if drawdown_percentage <= -5:
+            if drawdown_percentage <= drawdown_threshold:
                 reward -= 10
                 reward -= int(abs(drawdown_percentage) - 5)
                 print(f"Drawdown penalty applied: {-10 - int(abs(drawdown_percentage) - 5)}")
+            else:
+                print("No drawdown penalty: drawdown threshold not breached.")
 
-            if daily_profit < daily_profit_target:
+            if daily_profit >= daily_profit_target:
+                # Positive reward: Give a base reward plus a bonus for how much agent exceeds the target
+                excess = daily_profit - daily_profit_target
+                reward += 5  # Base reward for meeting target
+                reward += excess * 50  # Bonus: scale to keep magnitude similar to penalties
+                print(f"Profit target exceeded: +5 base, +{excess * 50:.2f} bonus")
+            else:
                 if profit_shortfall > 0.5:
                     reward -= 5
                     print("Profit shortfall penalty applied: -5")
