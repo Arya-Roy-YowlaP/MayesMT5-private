@@ -262,55 +262,71 @@ class Game(object):
         return self.reward, self.is_over
 
     def reward_function(self, entry_price, current_price, position, 
-                        daily_profit, daily_loss, 
-                        daily_profit_target=100, daily_max_loss=-50, 
-                        step_count=0, max_steps_per_trade=50):
+                    daily_profit, daily_loss, 
+                    daily_profit_target=100, daily_max_loss=-50, 
+                    step_count=0, max_steps_per_trade=50):
         reward = 0
+
+        # Collect variable values for debug printing
+        peak_loss = getattr(self, "peak_loss", 0)
+        profit_percentage = (daily_profit / daily_profit_target) * 100 if daily_profit_target != 0 else 0
+        drawdown_percentage = ((peak_loss - daily_loss) / abs(peak_loss)) * 100 if peak_loss < 0 else 0
+        profit_shortfall = (daily_profit_target - daily_profit) / daily_profit_target if daily_profit < daily_profit_target else 0
+
+        print("----- REWARD FUNCTION DEBUG -----")
+        print(f"entry_price={entry_price}  current_price={current_price}  position={position}")
+        print(f"daily_profit={daily_profit}  daily_loss={daily_loss}")
+        print(f"daily_profit_target={daily_profit_target}  daily_max_loss={daily_max_loss}")
+        print(f"peak_loss={peak_loss}  profit_percentage={profit_percentage}  drawdown_percentage={drawdown_percentage}")
+        print(f"profit_shortfall={profit_shortfall}  step_count={step_count}  max_steps_per_trade={max_steps_per_trade}")
 
         # --- 1. Stepwise reward for correct direction ---
         if position != 0:
             price_change = current_price - self.prev_price
-            # Give small reward for being in correct direction, penalty otherwise
             directional_pnl = price_change * position
             reward += 0.1 * np.sign(directional_pnl)
+            print(f"price_change={price_change}  directional_pnl={directional_pnl}  stepwise_reward={0.1 * np.sign(directional_pnl)}")
 
         # --- 2. Realized PnL at position close ---
-        # Only applies if trade closed at this step
         if self.is_over and entry_price != 0:
             pnl = (current_price - entry_price) * position
             reward += pnl
+            print(f"REALIZED PnL: {pnl}")
 
         # --- 3. Time decay penalty for trades held too long ---
         if position != 0 and step_count > max_steps_per_trade:
-            reward -= 0.5  # or scale by how much it overstays
+            reward -= 0.5
+            print(f"Time decay penalty applied: -0.5")
 
         # --- 4. Daily-level controls ---
-        # Profit bonus for hitting/exceeding daily target
-        profit_percentage = (daily_profit / daily_profit_target) * 100
         if profit_percentage >= 10:
-            reward += 10  # Base bonus for hitting 10%
-            reward += int(profit_percentage - 10)  # Additional +1 per 1% above 10%
-        peak_loss = getattr(self, "peak_loss", 0)
-        # Drawdown penalty (based on peak loss)
-        drawdown_percentage = ((self.peak_loss - daily_loss) / abs(self.peak_loss)) * 100 if self.peak_loss < 0 else 0
+            reward += 10
+            reward += int(profit_percentage - 10)
+            print(f"Profit target bonus applied: {10 + int(profit_percentage - 10)}")
+
         if drawdown_percentage <= -5:
             reward -= 10
             reward -= int(abs(drawdown_percentage) - 5)
-            self.is_over = True  # Terminate trading for the day
+            self.is_over = True
+            print(f"Drawdown penalty applied: {-10 - int(abs(drawdown_percentage) - 5)}")
 
-        # Penalty for not meeting profit target
         if daily_profit < daily_profit_target:
-            profit_shortfall = (daily_profit_target - daily_profit) / daily_profit_target
             if profit_shortfall > 0.5:
                 reward -= 5
+                print("Profit shortfall penalty applied: -5")
             elif profit_shortfall > 0.3:
                 reward -= 3
+                print("Profit shortfall penalty applied: -3")
             else:
                 reward -= 2
+                print("Profit shortfall penalty applied: -2")
 
-        # Daily loss penalty
         if daily_loss <= daily_max_loss:
             reward -= 10
+            print("Daily loss penalty applied: -10")
+
+        print(f"Final reward returned: {reward}\n")
+        print("---------------------------------")
 
         return reward
 
