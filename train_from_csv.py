@@ -92,7 +92,7 @@ class Game(object):
                 self.step_count = 0  # flat, so reset
 
 
-    def close_position(self):
+    def _close_position(self):
         trade_pnl = (self.curr_price - self.entry) * self.position
         self.daily_profit += trade_pnl if trade_pnl > 0 else 0
         self.daily_loss += trade_pnl if trade_pnl <= 0 else 0
