@@ -724,13 +724,13 @@ def main_debug():
     df30m, df4h, df1d = load_mt5_data('GBPUSD', ['M30', 'H4', 'D1'], )
 
         
-        env = Game(
-            bars30m=df30m,
-            bars4h=df4h, 
-            bars1d=df1d,
-            lkbk=100,
-            init_idx= 101
-        )
+    env = Game(
+        bars30m=df30m,
+        bars4h=df4h, 
+        bars1d=df1d,
+        lkbk=100,
+        init_idx= 101
+    )
 
     bars30m,bars4h,bars1d,lkbk,init_idx = env.bars30m,env.bars4h,env.bars1d,env.lkbk,env.init_idx
     # Create a function that returns a new environment instance
