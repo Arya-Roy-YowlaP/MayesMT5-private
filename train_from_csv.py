@@ -381,7 +381,13 @@ class Game(object):
         self._time_of_day = 0
         self._day_of_week = 0
         # Keep current position instead of resetting to init_idx
-        self.curr_idx = self.curr_idx if hasattr(self, 'curr_idx') else (self.init_idx if self.init_idx is not None else 0)
+        # self.curr_idx = self.curr_idx if hasattr(self, 'curr_idx') else (self.init_idx if self.init_idx is not None else 0)
+        min_start = self.lkbk - 1
+        longest_window_required = 99  # Or whatever your longest rolling indicator window is
+        max_start = len(self.bars30m) - (longest_window_required + 1)
+        self.curr_idx = random.randint(min_start, max_start)
+
+        print(f"curr_idx: {self.curr_idx}")
         self.prev_price = self.bars30m['close'].iloc[int(self.curr_idx)]
         self.t_in_secs = (self.bars30m.index[-1] - self.bars30m.index[0]).total_seconds()
         self.start_idx = self.curr_idx
