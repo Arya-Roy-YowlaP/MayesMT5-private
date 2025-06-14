@@ -219,6 +219,7 @@ class Game(object):
         else:
             padding = self.bars30m.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1)
             self.last30m = pd.concat([padding, self.bars30m.iloc[:int(self.curr_idx)+1]])
+        print(f"last30m shape: {self.last30m.shape}")
             
         # Get 4h bars
         if int(self.curr_idx) >= self.lkbk-1:
@@ -226,6 +227,7 @@ class Game(object):
         else:
             padding = self.bars4h.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1)
             self.last4h = pd.concat([padding, self.bars4h.iloc[:int(self.curr_idx)+1]])
+        print(f"last4h shape: {self.last4h.shape}")
             
         # Get 1d bars
         if int(self.curr_idx) >= self.lkbk-1:
@@ -233,7 +235,7 @@ class Game(object):
         else:
             padding = self.bars1d.iloc[0].to_frame().T.repeat(self.lkbk - int(self.curr_idx) - 1)
             self.last1d = pd.concat([padding, self.bars1d.iloc[:int(self.curr_idx)+1]])
-
+        print(f"last1d shape: {self.last1d.shape}")
     def get_state(self):
         self._assemble_state()
         return np.array(self.state, dtype=np.float32)
@@ -387,7 +389,7 @@ class Game(object):
         self.t_in_secs = (self.bars30m.index[-1] - self.bars30m.index[0]).total_seconds()
         self.start_idx = self.curr_idx
         self.curr_time = self.bars30m.index[int(self.curr_idx)]
-        self._get_last_N_timebars()
+        # self._get_last_N_timebars()
         self.position = 0
         self.is_over = False
         self.reward = 0
