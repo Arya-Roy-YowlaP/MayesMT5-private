@@ -547,7 +547,7 @@ def train_ppo(env, logger, save_path="models"):
             lkbk,
             init_idx
         )
-        env.reset()
+        # env.reset()
         wrapped = GameGymWrapper(env)
         env = Monitor(wrapped)
         return env
