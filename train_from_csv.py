@@ -140,8 +140,13 @@ class Game(object):
             # Must have at least 99 rows for longest indicator to work
             if len(bars) < 99 or bars[['close', 'high', 'low']].isnull().any().any():
                 
-                print(f"Insufficient or invalid data for indicators - Length: {len(bars)}, Null values: {bars[['close', 'high', 'low']].isnull().sum().to_dict()}, Required length: 99")
-                return np.full(16, 0.0)
+                # print(f"Insufficient or invalid data for indicators - Length: {len(bars)}, Null values: {bars[['close', 'high', 'low']].isnull().sum().to_dict()}, Required length: 99")
+                # return np.full(16, 0.0)
+                raise ValueError(
+        f"Insufficient or invalid data for indicators — Length: {len(bars)}, "
+        f"Null values: {bars[['close', 'high', 'low']].isnull().sum().to_dict()}, "
+        f"Required length: 99"
+    )
 
             try:
                 # SMA Ribbon (5 values using SMA(1) with shift 0–4)
