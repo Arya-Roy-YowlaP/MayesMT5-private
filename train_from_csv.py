@@ -412,7 +412,7 @@ class Game(object):
         # self.curr_idx = self.curr_idx if hasattr(self, 'curr_idx') else (self.init_idx if self.init_idx is not None else 0)
         min_start = self.lkbk - 1
         longest_window_required = 99  # Or whatever your longest rolling indicator window is
-        max_start = (len(self.bars1d) - (longest_window_required + 1))*48 + longest_window_required
+        max_start = (len(self.bars1d) - (longest_window_required + 7))*48 + longest_window_required
         self.curr_idx = random.randint(min_start, max_start)
 
         print(f"curr_idx: {self.curr_idx}")
