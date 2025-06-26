@@ -249,7 +249,7 @@ class Game(object):
 
         # Get 1d bars
         if int(self.curr_idx) >= self.lkbk - 1:
-            base_idx = 106 + int((self.curr_idx - 100) // 48)
+            base_idx = 106 + int((self.curr_idx - 100) // 52)
             start = base_idx - self.lkbk + 1
             end = base_idx + 1
             print(f"1d slicing: iloc[{start}:{end}]")
@@ -412,7 +412,7 @@ class Game(object):
         # self.curr_idx = self.curr_idx if hasattr(self, 'curr_idx') else (self.init_idx if self.init_idx is not None else 0)
         min_start = self.lkbk - 1
         longest_window_required = 99  # Or whatever your longest rolling indicator window is
-        max_start = (len(self.bars1d) - (longest_window_required + 109))*48 + longest_window_required
+        max_start = (len(self.bars1d) - (longest_window_required + 109))*52 + longest_window_required
         self.curr_idx = random.randint(min_start, max_start)
 
         print(f"curr_idx: {self.curr_idx}")
