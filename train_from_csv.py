@@ -218,48 +218,48 @@ class Game(object):
 
 
     def _get_last_N_timebars(self):
-        print(f"\n[get_last_N_timebars] curr_idx: {self.curr_idx}, lkbk: {self.lkbk}")
+        # print(f"\n[get_last_N_timebars] curr_idx: {self.curr_idx}, lkbk: {self.lkbk}")
 
     # Get 30m bars
         if int(self.curr_idx) >= self.lkbk - 1:
             start = int(self.curr_idx) - self.lkbk + 1
             end = int(self.curr_idx) + 1
-            print(f"30m slicing: iloc[{start}:{end}]")
+            # print(f"30m slicing: iloc[{start}:{end}]")
             self.last30m = self.bars30m.iloc[start:end]
         else:
             pad_count = self.lkbk - int(self.curr_idx) - 1
-            print(f"30m padding with {pad_count} rows")
+            # print(f"30m padding with {pad_count} rows")
             padding = self.bars30m.iloc[0].to_frame().T.repeat(pad_count)
             self.last30m = pd.concat([padding, self.bars30m.iloc[:int(self.curr_idx) + 1]])
-        print(f"30m shape: {self.last30m.shape}")
+        # print(f"30m shape: {self.last30m.shape}")
 
         # Get 4h bars
         if int(self.curr_idx) >= self.lkbk - 1:
             base_idx = 100 + int((self.curr_idx - 100) // 9)
             start = base_idx - self.lkbk + 1
             end = base_idx + 1
-            print(f"4h slicing: iloc[{start}:{end}]")
+            # print(f"4h slicing: iloc[{start}:{end}]")
             self.last4h = self.bars4h.iloc[start:end]
         else:
             pad_count = self.lkbk - int(self.curr_idx) - 1
-            print(f"4h padding with {pad_count} rows")
+            # print(f"4h padding with {pad_count} rows")
             padding = self.bars4h.iloc[0].to_frame().T.repeat(pad_count)
             self.last4h = pd.concat([padding, self.bars4h.iloc[:int(self.curr_idx) + 1]])
-        print(f"4h shape: {self.last4h.shape}")
+        # print(f"4h shape: {self.last4h.shape}")
 
         # Get 1d bars
         if int(self.curr_idx) >= self.lkbk - 1:
             base_idx = 100+int((self.curr_idx - 100) // 52)
             start = base_idx - self.lkbk + 1
             end = base_idx + 1
-            print(f"1d slicing: iloc[{start}:{end}]")
+            # print(f"1d slicing: iloc[{start}:{end}]")
             self.last1d = self.bars1d.iloc[start:end]
         else:
             pad_count = self.lkbk - int(self.curr_idx) - 1
-            print(f"1d padding with {pad_count} rows")
+            # print(f"1d padding with {pad_count} rows")
             padding = self.bars1d.iloc[0].to_frame().T.repeat(pad_count)
             self.last1d = pd.concat([padding, self.bars1d.iloc[:int(self.curr_idx) + 1]])
-        print(f"1d shape: {self.last1d.shape}")
+        # print(f"1d shape: {self.last1d.shape}")
 
     def get_state(self):
         self._assemble_state()
