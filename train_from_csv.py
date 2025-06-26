@@ -235,7 +235,7 @@ class Game(object):
 
         # Get 4h bars
         if int(self.curr_idx) >= self.lkbk - 1:
-            base_idx = 14 + int((self.curr_idx - 14) // 8)
+            base_idx = 122 + int((self.curr_idx - 122 // 8)
             start = base_idx - self.lkbk + 1
             end = base_idx + 1
             print(f"4h slicing: iloc[{start}:{end}]")
