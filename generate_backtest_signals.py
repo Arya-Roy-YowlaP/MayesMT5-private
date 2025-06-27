@@ -166,7 +166,8 @@ def main():
                 break
             
             # Convert action to signal
-            signal = ["HOLD", "SELL", "BUY"][action[0]]
+            signal_idx = int(action[0]) if isinstance(action, (np.ndarray, list)) else int(action)
+            signal = ["HOLD", "BUY", "SELL", "FLAT"][signal_idx]
             
             try:
                 current_idx = env.envs[0].env.game.curr_idx
